@@ -1,3 +1,10 @@
+# Saved models
+*.pt
+
+# Saved Datasets
+datasets/CIFAR10/*
+datasets/MNIST/*
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
