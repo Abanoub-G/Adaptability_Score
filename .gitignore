@@ -1,5 +1,7 @@
 # Saved models
 *.pt
+*.pdf
+*.png
 
 # Saved Datasets
 datasets/CIFAR10/*

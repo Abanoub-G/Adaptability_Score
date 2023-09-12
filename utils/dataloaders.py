@@ -1,29 +1,140 @@
 import torch
+from torch.utils.data import Dataset
+
 import torchvision
 from torchvision import datasets, transforms
+
 import numpy as np
 import random
 
+import matplotlib.pyplot as plt
+
+class CustomTensorDataset(Dataset):
+    """TensorDataset with support of transforms and samples generation even when batchsize > dataset size.
+    """
+    def __init__(self, tensors, transform=None, batch_size=64):
+        assert all(tensors[0].size(0) == tensor.size(0) for tensor in tensors)
+        self.tensors = tensors
+        self.transform = transform
+
+        self.data_len = self.tensors[0].size(0)
+        self.batch_size = batch_size
+
+    def __getitem__(self, index):
+
+        index = index % self.data_len #
+
+        x = self.tensors[0][index]
+
+        if self.transform:
+            x = self.transform(x)
+
+        y = self.tensors[1][index]
+
+        return x, y
+
+    def __len__(self):
+        return max(self.data_len, self.batch_size)
+        # return self.tensors[0].size(0)
+
+
+
+def custom_train_transform(tensor):
+
+    # Convert the tensor to a PIL image
+    image = transforms.ToPILImage()(tensor)
+
+    # Define random transforms: rotation, random horizontal flip, and random crop
+    random_rotation = transforms.RandomRotation(degrees=(-45, 45))  # Rotate between -45 and 45 degrees
+    random_horizontal_flip = transforms.RandomHorizontalFlip(p=0.5)  # Randomly flip horizontally with 50% probability
+    random_vertical_flip = transforms.RandomVerticalFlip(p=0.5)  # Randomly flip vertically with 50% probability
+    random_crop = transforms.RandomCrop(size=(32, 32))  # Crop the image to a size of (64, 64)
+    random_resized_crop = transforms.RandomResizedCrop(32, scale=(0.8,0.8))  # Crop the image to a size of (64, 64)
+
+    # Normalize the tensor
+    mean = np.array([0.5, 0.5, 0.5])
+    std = np.array([0.5, 0.5, 0.5])
+    normalize = transforms.Normalize(mean=mean, std=std)
+
+    # Apply the transforms in a sequence
+    transform = transforms.Compose([
+        # random_rotation,
+        random_horizontal_flip,
+        random_vertical_flip,
+        # random_crop,
+        # random_resized_crop,
+        transforms.ToTensor(),  # Converts the PIL image to a tensor
+        normalize,  # Normalize the tensor
+    ])
+
+    # Apply the transforms to the image
+    transformed_tensor = transform(image)
+
+    # Convert the transformed image back to a tensor
+    # transformed_tensor = transforms.ToTensor()(transformed_image)
+
+    return transformed_tensor
+
+def custom_test_transform(tensor):
+
+    # Convert the tensor to a PIL image
+    image = transforms.ToPILImage()(tensor)
+
+    # Normalize the tensor
+    mean = np.array([0.5, 0.5, 0.5])
+    std = np.array([0.5, 0.5, 0.5])
+    normalize = transforms.Normalize(mean=mean, std=std)
+
+    # Apply the transforms in a sequence
+    transform = transforms.Compose([
+        transforms.ToTensor(),  # Converts the PIL image to a tensor
+        normalize,  # Normalize the tensor
+    ])
+
+    # Apply the transforms to the image
+    transformed_tensor = transform(image)
+
+    # Convert the transformed image back to a tensor
+    # transformed_tensor = transforms.ToTensor()(transformed_image)
+
+    return transformed_tensor
+
+
+def imshow(img, file_name, title=''):
+    """Plot the image batch.
+    """
+    plt.figure(figsize=(10, 10))
+    plt.title(title)
+    plt.imshow(np.transpose( img.numpy(), (1, 2, 0)), cmap='gray')
+    plt.savefig(file_name)
+
+
 def cifar10_c_dataloader(severity, noise_type="gaussian_noise"):
-   labels = torch.from_numpy(np.load("../datasets/CIFAR10/CIFAR-10-C/labels.npy"))
-   labels = labels.to(torch.long)
-   test_images = torch.from_numpy(np.load("../datasets/CIFAR10/CIFAR-10-C/"+noise_type+".npy"))
-   images_size = 32  # 32 x 32
+    labels = torch.from_numpy(np.load("../datasets/CIFAR10/CIFAR-10-C/labels.npy"))
+    labels = labels.to(torch.long)
+    test_images = torch.from_numpy(np.load("../datasets/CIFAR10/CIFAR-10-C/"+noise_type+".npy"))
+    images_size = 32  # 32 x 32
 
-   # Filter based on Severity
-   labels = labels[10000*(severity-1):(10000*(severity))]
-   images = test_images[10000*(severity-1):(10000*(severity))]
-    
-   # Rearranging tensor for corrupte data to match format of un-corrupt.
-   images = images.reshape((images.size()[0], images_size, images_size,3))
-   images = np.transpose(images,(0,3,1,2)) # Custom transpose needed for ouput of courrputed and non courrputed to match (found emprically)
-   
-   images = images.float()/255
+    # Filter based on Severity
+    labels = labels[10000*(severity-1):(10000*(severity))]
+    images = test_images[10000*(severity-1):(10000*(severity))]
 
-   test_set_c = torch.utils.data.TensorDataset(images,labels)
-   testloader_c = torch.utils.data.DataLoader(test_set_c, batch_size=64, shuffle=False)
+    # Rearranging tensor for corrupte data to match format of un-corrupt.
+    images = images.reshape((images.size()[0], images_size, images_size,3))
+    images = np.transpose(images,(0,3,1,2)) # Custom transpose needed for ouput of courrputed and non courrputed to match (found emprically)
 
-   return testloader_c, images, labels
+    images = images.float()/255
+
+    # test_set_c = torch.utils.data.TensorDataset(images,labels)
+    # testloader_c = torch.utils.data.DataLoader(test_set_c, batch_size=64, shuffle=False)
+
+    train_set_c = CustomTensorDataset(tensors=(images, labels), transform=custom_train_transform)
+    trainloader_c = torch.utils.data.DataLoader(train_set_c, batch_size=64, shuffle=False)
+
+    test_set_c = CustomTensorDataset(tensors=(images, labels), transform=custom_test_transform)
+    testloader_c = torch.utils.data.DataLoader(test_set_c, batch_size=64, shuffle=False)
+
+    return trainloader_c, testloader_c, images, labels
 
 def mnist_c_dataloader(noise_type="gaussian_noise"):
 
@@ -51,23 +162,32 @@ def mnist_c_dataloader(noise_type="gaussian_noise"):
 
 def pytorch_dataloader(dataset_name="", dataset_dir="", images_size=32, batch_size=64):
 
-    transform = transforms.Compose([
-              transforms.Resize((images_size, images_size)),
-              transforms.ToTensor()
+    train_transform = transforms.Compose([
+                transforms.Resize((images_size, images_size)),
+                transforms.RandomCrop(32, padding=4),
+                transforms.RandomHorizontalFlip(),
+                transforms.ToTensor(),
+                transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+              ])
+
+    test_transform = transforms.Compose([
+                transforms.Resize((images_size, images_size)),
+                transforms.ToTensor(),
+                transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
               ])
 
     # Check which dataset to load.
     if dataset_name == "CIFAR10":
-        train_set = torchvision.datasets.CIFAR10(root=dataset_dir, train=True, download=True, transform=transform) 
-        test_set = torchvision.datasets.CIFAR10(root=dataset_dir, train=False, download=True, transform=transform)
+        train_set = torchvision.datasets.CIFAR10(root=dataset_dir, train=True, download=True, transform=train_transform) 
+        test_set = torchvision.datasets.CIFAR10(root=dataset_dir, train=False, download=True, transform=test_transform)
     
     elif dataset_name =="CIFAR100": 
-        train_set = torchvision.datasets.CIFAR10(root=dataset_dir, train=True, download=True, transform=transform) 
-        test_set = torchvision.datasets.CIFAR10(root=dataset_dir, train=False, download=True, transform=transform)
+        train_set = torchvision.datasets.CIFAR10(root=dataset_dir, train=True, download=True, transform=train_transform) 
+        test_set = torchvision.datasets.CIFAR10(root=dataset_dir, train=False, download=True, transform=test_transform)
 
     elif dataset_name == "TinyImageNet":
-        train_set = torchvision.datasets.ImageFolder(root=dataset_dir+"tiny-imagenet-200/train", transform=transform)
-        test_set = torchvision.datasets.ImageFolder(root=dataset_dir+"tiny-imagenet-200/val", transform=transform)
+        train_set = torchvision.datasets.ImageFolder(root=dataset_dir+"tiny-imagenet-200/train", transform=train_transform)
+        test_set = torchvision.datasets.ImageFolder(root=dataset_dir+"tiny-imagenet-200/val", transform=test_transform)
 
     else:
         print("ERROR: dataset name is not integrated into NETZIP yet.")
@@ -91,29 +211,59 @@ def samples_dataloader(N_T, noisy_images, noisy_labels):
     
     selected_noisy_images = np.take(noisy_images,samples_indices_array, axis=0)
     selected_noisy_labels = np.take(noisy_labels,samples_indices_array, axis=0)
-    # print("samples_indices_array = ",samples_indices_array)
-    # print("selected_noisy_images = ", np.shape(selected_noisy_images))
-    # print("selected_noisy_labels = ", np.shape(selected_noisy_labels))
-    # input("press enter")
         
     N_T_test_set_c = torch.utils.data.TensorDataset(selected_noisy_images,selected_noisy_labels)
     N_T_testloader_c = torch.utils.data.DataLoader(N_T_test_set_c, batch_size=64, shuffle=True)
 
-    # print("selected_noisy_images shape = ",selected_noisy_images.shape)
-    # print("selected_noisy_images type = ",selected_noisy_images.dtype)
-    # print("selected_noisy_labels shape = ",selected_noisy_labels.shape)
-    # print("selected_noisy_labels type = ",selected_noisy_labels.dtype)
-    
-
-    # input("enter to continue")
-    # == TODO: Data Augmentation: To do it we need to implement our custom dataset class like done here: https://stackoverflow.com/questions/55588201/pytorch-transforms-on-tensordataset
-    #   # load noisy dataset
-    #   train_transform = transforms.Compose([
-    #         transforms.RandomCrop(32, padding=4),
-    #         transforms.RandomRotation(),
-    #         transforms.RandomHorizontalFlip(),
-    #         transforms.ToTensor(),
-    #         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
-    #         ])
-
     return N_T_testloader_c
+
+
+def samples_dataloader_iterative(N_T, noisy_images, noisy_labels, samples_indices_array, N_T_step):
+    # Get length of images
+    max_num_noisy_samples = len(noisy_labels)-1
+
+    for _ in range(N_T_step): 
+        # Select a random number from the max number of images
+        i = random.randint(0,max_num_noisy_samples)
+        samples_indices_array.append(i)
+    
+    selected_noisy_images = np.take(noisy_images,samples_indices_array, axis=0)
+    selected_noisy_labels = np.take(noisy_labels,samples_indices_array, axis=0)
+        
+    N_T_test_set_c = torch.utils.data.TensorDataset(selected_noisy_images,selected_noisy_labels)
+    N_T_testloader_c = torch.utils.data.DataLoader(N_T_test_set_c, batch_size=64, shuffle=True)
+
+    return N_T_testloader_c, samples_indices_array
+
+def augmented_samples_dataloader_iterative(N_T, noisy_images, noisy_labels, samples_indices_array, N_T_step):
+    # Get length of images
+    max_num_noisy_samples = len(noisy_labels)-1
+
+    for _ in range(N_T_step): 
+        # Select a random number from the max number of images
+        i = random.randint(0,max_num_noisy_samples)
+        samples_indices_array.append(i)
+    
+    selected_noisy_images = np.take(noisy_images,samples_indices_array, axis=0)
+    selected_noisy_labels = np.take(noisy_labels,samples_indices_array, axis=0)
+
+    N_T_train_set_c = CustomTensorDataset(tensors=(selected_noisy_images, selected_noisy_labels), transform=custom_train_transform)
+    N_T_trainloader_c = torch.utils.data.DataLoader(N_T_train_set_c, batch_size=64, shuffle=False)
+
+    N_T_test_set_c = CustomTensorDataset(tensors=(selected_noisy_images, selected_noisy_labels), transform=custom_test_transform)
+    N_T_testloader_c = torch.utils.data.DataLoader(N_T_test_set_c, batch_size=64, shuffle=False)
+
+
+    # Display some images to visualise transforms
+    show_pics_samples = True
+    if show_pics_samples == True:
+        for i, data in enumerate(N_T_trainloader_c):
+            x, y = data  
+            imshow(torchvision.utils.make_grid(x, 4), "train_transforms.png" , title='train_Transforms')
+            break
+        for i, data in enumerate(N_T_testloader_c):
+            x, y = data  
+            imshow(torchvision.utils.make_grid(x, 4), "test_transforms.png", title='test_Transforms')
+            break
+
+    return N_T_trainloader_c, N_T_testloader_c, samples_indices_array

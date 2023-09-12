@@ -7,30 +7,30 @@ from metrics.accuracy.topAccuracy import top1Accuracy
 
 def on_task_update(task_id, trainloader, model, optimizer, fisher_dict, optpar_dict, device):
 
-	model.train()
-	optimizer.zero_grad()
-	
-	# accumulating gradients
-	for inputs, labels in trainloader:
+    model.train()
+    optimizer.zero_grad()
+    
+    # accumulating gradients
+    for inputs, labels in trainloader:
 
-		inputs = inputs.to(device)
-		labels = labels.to(device)
+        inputs = inputs.to(device)
+        labels = labels.to(device)
 
-		outputs = model(inputs)
-	
-		loss = F.cross_entropy(outputs, labels)
-		loss.backward()
+        outputs = model(inputs)
+    
+        loss = F.cross_entropy(outputs, labels)
+        loss.backward()
 
-	fisher_dict[task_id] = {}
-	optpar_dict[task_id] = {}
+    fisher_dict[task_id] = {}
+    optpar_dict[task_id] = {}
 
-	# gradients accumulated can be used to calculate fisher
-	for name, param in model.named_parameters():
-		
-		optpar_dict[task_id][name] = param.data.clone()
-		fisher_dict[task_id][name] = param.grad.data.clone().pow(2)
+    # gradients accumulated can be used to calculate fisher
+    for name, param in model.named_parameters():
+        
+        optpar_dict[task_id][name] = param.data.clone()
+        fisher_dict[task_id][name] = param.grad.data.clone().pow(2)
 
-	return fisher_dict, optpar_dict
+    return fisher_dict, optpar_dict
 
 
 def train_model_ewc(model, train_loader, test_loader, device, fisher_dict, optpar_dict, num_epochs=200, ewc_lambda = 1, learning_rate=1e-2, momentum=0.9, weight_decay=1e-5 ):
@@ -79,19 +79,18 @@ def train_model_ewc(model, train_loader, test_loader, device, fisher_dict, optpa
             # print(outputs)
             # input("press enter")
             loss = criterion(outputs, labels)
-            use_EWC = True
-            if use_EWC:
-	            # EWC -- magic here! :-)
-	            task_id = 1
-				for task in range(task_id):
-					# print("I am in EWC and I am working on taks nummber", task)
-					# print("ewc_lambda[task] = ",ewc_lambda[task])
-					for name, param in model.named_parameters():
-						fisher = fisher_dict[task][name]
-						optpar = optpar_dict[task_id-1][name]
-						loss += (fisher * (optpar - param).pow(2)).sum() * ewc_lambda[task]
-						# loss += ((optpar - param).pow(2)).sum() * ewc_lambda   
-
+            
+            # EWC -- magic here! :-)
+            task_id = 1
+            for task in range(task_id):
+                # print("I am in EWC and I am working on taks nummber", task)
+                # print("ewc_lambda[task] = ",ewc_lambda[task])
+                for name, param in model.named_parameters():
+                    fisher = fisher_dict[task][name]
+                    optpar = optpar_dict[task_id-1][name]
+                    loss += (fisher * (optpar - param).pow(2)).sum() * ewc_lambda
+                    # loss += (fisher * (optpar - param).pow(2)).sum() * ewc_lambda[task]
+                    # loss += ((optpar - param).pow(2)).sum() * ewc_lambda   
 
 
             loss.backward()
@@ -116,76 +115,76 @@ def train_model_ewc(model, train_loader, test_loader, device, fisher_dict, optpa
 
 # def retraining_objective(hyper_params):
 
-# 	SGD_only_flag = True 
+#   SGD_only_flag = True 
 
-# 	if SGD_only_flag:
-# 		ewc_lambda_hyper = 0
-# 	else:
-# 		ewc_lambda_hyper = hyper_params["x"][0]
-	
-# 	lr_retrain_hyper = hyper_params["x"][1]
-	
-# 	print(ewc_lambda_hyper)
+#   if SGD_only_flag:
+#       ewc_lambda_hyper = 0
+#   else:
+#       ewc_lambda_hyper = hyper_params["x"][0]
+    
+#   lr_retrain_hyper = hyper_params["x"][1]
+    
+#   print(ewc_lambda_hyper)
 
-# 	ewc_lambdas_hyper = [ewc_lambda_hyper]
+#   ewc_lambdas_hyper = [ewc_lambda_hyper]
 
-# 	# Retrain
+#   # Retrain
 
-# 	# Get the score of Original tasks on the retrained model: get performance on each tasks individiually, subtract from theshold, get the max diff.
-# 	array_of_original_tasks_scores = [] 
+#   # Get the score of Original tasks on the retrained model: get performance on each tasks individiually, subtract from theshold, get the max diff.
+#   array_of_original_tasks_scores = [] 
 
-	
-# 	# Calculate Score
-# 	retraining_score = original_tasks_score + accumilted_tasks_score
+    
+#   # Calculate Score
+#   retraining_score = original_tasks_score + accumilted_tasks_score
 
-# 	temp_retrained_models_array.append(retrained_model)
-# 	temp_retraining_scores_array.append(retraining_score)
-# 	# retraining_counter += 1
-# 	# print("retraining counter = ", retraining_counter)
-# 	print("original_tasks_score = " ,original_tasks_score)
-# 	print("accumilted_tasks_score = " ,accumilted_tasks_score)
-# 	print("retraining_score = " ,retraining_score)
-# 	print("=============================================")
-# 	# input("Press enter to continue")
+#   temp_retrained_models_array.append(retrained_model)
+#   temp_retraining_scores_array.append(retraining_score)
+#   # retraining_counter += 1
+#   # print("retraining counter = ", retraining_counter)
+#   print("original_tasks_score = " ,original_tasks_score)
+#   print("accumilted_tasks_score = " ,accumilted_tasks_score)
+#   print("retraining_score = " ,retraining_score)
+#   print("=============================================")
+#   # input("Press enter to continue")
 
-# 	return retraining_score
+#   return retraining_score
 
 
 
 
 # def retrain(model, testloader, N_T_testloader_c):
 
-# 	retrained_model = copy.deepcopy(model)
+#   retrained_model = copy.deepcopy(model)
 
-# 	# Set Thresholds for controlled forgetting
-# 	CF_lim = 80  # Threshold for controlled forgetting
-# 	zeta = 1    # Constant selected to show the importance of not dropping below the CF_lim 
-# 	K    = 0
-# 	while True:
-# 		# Calculate accuracy of retrained model on original dataset X_0 
-# 		_, A_0    = top1Accuracy(model=retrained_model, test_loader=testloader, device=device, criterion=None)
-		
-# 		# Calculate accuracy of retrained model on samples, N_T, from target dataset X_tar 
-# 		_, A_k    = top1Accuracy(model=retrained_model, test_loader=N_T_testloader_c, device=device, criterion=None)
-		
-# 		# Calculate CFAS for retrained model
-# 		CFAS = zeta * (CF_lim - A_0) + (100 - A_k)
-	
-# 		# If CFAS satisfied, break while loop
-# 		if CFAS <= K:
-# 			break
+#   # Set Thresholds for controlled forgetting
+#   CF_lim = 80  # Threshold for controlled forgetting
+#   zeta = 1    # Constant selected to show the importance of not dropping below the CF_lim 
+#   K    = 0
+#   while True:
+#       # Calculate accuracy of retrained model on original dataset X_0 
+#       _, A_0    = top1Accuracy(model=retrained_model, test_loader=testloader, device=device, criterion=None)
+        
+#       # Calculate accuracy of retrained model on samples, N_T, from target dataset X_tar 
+#       _, A_k    = top1Accuracy(model=retrained_model, test_loader=N_T_testloader_c, device=device, criterion=None)
+        
+#       # Calculate CFAS for retrained model
+#       CFAS = zeta * (CF_lim - A_0) + (100 - A_k)
+    
+#       # If CFAS satisfied, break while loop
+#       if CFAS <= K:
+#           break
 
-# 		else:
-# 			pass
-# 			# Change paraemters
-
-
-
-# 			# retrain
+#       else:
+#           pass
+#           # Change paraemters
 
 
 
+#           # retrain
 
 
-# 	return retrained_model
+
+
+
+#   return retrained_model
 
