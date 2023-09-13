@@ -32,6 +32,13 @@ def model_selection(model_selection_flag=0, model_dir="", model_choice="", model
         # Create an untrained model.
         model = create_model(model_dir, model_choice, model_variant, num_classes)
 
+    elif model_selection_flag == 1 and model_variant=="resnet26":
+        # Load a pretrained model from Pytorch.
+        print("CUSTOM LOAD")
+        model = create_model(model_dir, model_choice, model_variant, num_classes)
+        state_dict = torch.hub.load_state_dict_from_url("https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/resnet26-9aa10e23.pth", progress=True)
+        model.load_state_dict(state_dict)
+
     elif model_selection_flag == 1:
         # Load a pretrained model from Pytorch.
         model = torch.hub.load('pytorch/vision:v0.10.0', model_variant, pretrained=True)

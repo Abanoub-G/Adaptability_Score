@@ -31,7 +31,7 @@ DATASET_NAME             = "CIFAR10" # Options: "CIFAR10" "CIFAR100" "TinyImageN
 NUM_CLASSES              = 1000 # Number of classes in dataset
 
 MODEL_CHOICE             = "resnet" # Option:"resnet" 
-MODEL_VARIANT            = "resnet18" # Common Options: "resnet18" "resnet26" For more options explore files in models to find the different options.
+MODEL_VARIANT            = "resnet26" # Common Options: "resnet18" "resnet26" For more options explore files in models to find the different options.
 
 MODEL_DIR                = "../models/" + MODEL_CHOICE
 MODEL_SELECTION_FLAG     = 1 # create an untrained model = 0, start from a pytorch trained model = 1, start from a previously saved local model = 2
