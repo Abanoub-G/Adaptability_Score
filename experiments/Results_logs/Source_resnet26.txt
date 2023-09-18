@@ -1,0 +1,40 @@
+original = 0.8723
+
+brightness = 0.8015
+
+contrast = 0.1934
+
+defocus_blur = 0.5169
+
+elastic_transform = 0.7104
+
+fog = 0.4893
+
+frost = 0.6754
+
+gaussian_blur = 0.4543
+
+gaussian_noise = 0.5904
+
+glass_blur = 0.5966
+
+impulse_noise = 0.3792
+
+jpeg_compression = 0.7951
+
+motion_blur = 0.5876
+
+pixelate = 0.6697
+
+saturate = 0.7475
+
+shot_noise = 0.6192
+
+snow = 0.7252
+
+spatter = 0.6581
+
+speckle_noise = 0.6094
+
+zoom_blur = 0.5802
+

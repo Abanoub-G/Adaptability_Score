@@ -35,7 +35,7 @@ DATASET_NAME             = "CIFAR10" # Options: "CIFAR10" "CIFAR100" "TinyImageN
 NUM_CLASSES              = 1000 # Number of classes in dataset
 
 MODEL_CHOICE             = "resnet" # Option:"resnet" "vgg"
-MODEL_VARIANT            = "resnet18" # Common Options: "resnet18" "vgg11" For more options explore files in models to find the different options.
+MODEL_VARIANT            = "resnet26" # Common Options: "resnet18" "vgg11" For more options explore files in models to find the different options.
 
 MODEL_DIR                = "../models/" + MODEL_CHOICE
 MODEL_SELECTION_FLAG     = 2 # create an untrained model = 0, start from a pytorch trained model = 1, start from a previously saved local model = 2
@@ -44,14 +44,16 @@ MODEL_FILENAME     = MODEL_VARIANT +"_"+DATASET_NAME+".pt"
 MODEL_FILEPATH     = os.path.join(MODEL_DIR, MODEL_FILENAME)
 
 
-NOISE_TYPES_ARRAY = ["brightness","contrast","defocus_blur",
-					"elastic_transform","fog","frost","gaussian_blur",
-					"gaussian_noise", "glass_blur", "impulse_noise",
-					"jpeg_compression", "motion_blur", "pixelate", 
-					"saturate", "shot_noise", "snow", "spatter", 
-					"speckle_noise", "zoom_blur"]
+# NOISE_TYPES_ARRAY = ["brightness","contrast","defocus_blur",
+# 					"elastic_transform","fog","frost","gaussian_blur",
+# 					"gaussian_noise", "glass_blur", "impulse_noise",
+# 					"jpeg_compression", "motion_blur", "pixelate", 
+# 					"saturate", "shot_noise", "snow", "spatter", 
+# 					"speckle_noise", "zoom_blur"]
 
 # NOISE_TYPES_ARRAY = ["contrast","motion_blur","fog"]
+
+NOISE_TYPES_ARRAY = ["impulse_noise"]
 
 NOISE_SEVERITY 	  = 5 # Options from 1 to 5
 
@@ -241,7 +243,7 @@ def main():
 		# Log
 		logs_dic[noise_type] = N_T_vs_A_T
 
-	results_log.write_file("exp66.txt")
+	results_log.write_file("exp68.txt")
 
 
 
