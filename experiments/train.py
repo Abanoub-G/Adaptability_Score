@@ -26,8 +26,8 @@ from metrics.accuracy.topAccuracy import top1Accuracy
 SEED_NUMBER              = 0
 USE_CUDA                 = True
 
-DATASET_DIR              = '../datasets/CIFAR10/'
-DATASET_NAME             = "CIFAR10" # Options: "CIFAR10" "CIFAR100" "TinyImageNet"  "ImageNet"
+DATASET_DIR              = '../datasets/CIFAR100/'
+DATASET_NAME             = "CIFAR100" # Options: "CIFAR10" "CIFAR100" "TinyImageNet"  "ImageNet"
 NUM_CLASSES              = 1000 # Number of classes in dataset
 
 MODEL_CHOICE             = "resnet" # Option:"resnet" 
@@ -41,8 +41,8 @@ SAVED_MODEL_FILEPATH     = os.path.join(MODEL_DIR, SAVED_MODEL_FILENAME)
 
 TRAINED_MODEL_FILENAME   = MODEL_VARIANT +"_"+DATASET_NAME+".pt"
 
-NUM_EPOCHS               = 10
-LEARNING_RATE            = 1e-5
+NUM_EPOCHS               = 5
+LEARNING_RATE            = 1e-3
 
 
 # Fix seeds to allow for repeatable results 

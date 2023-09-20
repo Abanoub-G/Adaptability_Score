@@ -5,6 +5,7 @@
 
 # Saved Datasets
 datasets/CIFAR10/*
+datasets/CIFAR100/*
 datasets/MNIST/*
 
 # Byte-compiled / optimized / DLL files
