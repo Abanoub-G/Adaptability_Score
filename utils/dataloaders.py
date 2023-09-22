@@ -109,10 +109,16 @@ def imshow(img, file_name, title=''):
     plt.savefig(file_name)
 
 
-def cifar10_c_dataloader(severity, noise_type="gaussian_noise"):
-    labels = torch.from_numpy(np.load("../datasets/CIFAR10/CIFAR-10-C/labels.npy"))
+def cifar_c_dataloader(severity, noise_type="gaussian_noise", dataset_choice ="CIFAR10"):
+    if dataset_choice == "CIFAR10":
+        labels = torch.from_numpy(np.load("../datasets/CIFAR10/CIFAR-10-C/labels.npy"))
+        test_images = torch.from_numpy(np.load("../datasets/CIFAR10/CIFAR-10-C/"+noise_type+".npy"))
+    elif dataset_choice == "CIFAR100":
+        labels = torch.from_numpy(np.load("../datasets/CIFAR100/CIFAR-100-C/labels.npy"))
+        test_images = torch.from_numpy(np.load("../datasets/CIFAR100/CIFAR-100-C/"+noise_type+".npy"))
+    
+    
     labels = labels.to(torch.long)
-    test_images = torch.from_numpy(np.load("../datasets/CIFAR10/CIFAR-10-C/"+noise_type+".npy"))
     images_size = 32  # 32 x 32
 
     # Filter based on Severity
@@ -122,6 +128,7 @@ def cifar10_c_dataloader(severity, noise_type="gaussian_noise"):
     # Rearranging tensor for corrupte data to match format of un-corrupt.
     images = images.reshape((images.size()[0], images_size, images_size,3))
     images = np.transpose(images,(0,3,1,2)) # Custom transpose needed for ouput of courrputed and non courrputed to match (found emprically)
+    
 
     images = images.float()/255
 
@@ -133,6 +140,15 @@ def cifar10_c_dataloader(severity, noise_type="gaussian_noise"):
 
     test_set_c = CustomTensorDataset(tensors=(images, labels), transform=custom_test_transform)
     testloader_c = torch.utils.data.DataLoader(test_set_c, batch_size=64, shuffle=False)
+
+    image, label = train_set_c[0]
+    image = image.numpy()
+    image = image.transpose((1, 2, 0))
+    plt.imshow(image)
+    plt.savefig("temp.png")
+    # input("press enter to conti")
+
+
 
     return trainloader_c, testloader_c, images, labels
 
@@ -182,8 +198,8 @@ def pytorch_dataloader(dataset_name="", dataset_dir="", images_size=32, batch_si
         test_set = torchvision.datasets.CIFAR10(root=dataset_dir, train=False, download=True, transform=test_transform)
     
     elif dataset_name =="CIFAR100": 
-        train_set = torchvision.datasets.CIFAR10(root=dataset_dir, train=True, download=True, transform=train_transform) 
-        test_set = torchvision.datasets.CIFAR10(root=dataset_dir, train=False, download=True, transform=test_transform)
+        train_set = torchvision.datasets.CIFAR100(root=dataset_dir, train=True, download=True, transform=train_transform) 
+        test_set = torchvision.datasets.CIFAR100(root=dataset_dir, train=False, download=True, transform=test_transform)
 
     elif dataset_name == "TinyImageNet":
         train_set = torchvision.datasets.ImageFolder(root=dataset_dir+"tiny-imagenet-200/train", transform=train_transform)

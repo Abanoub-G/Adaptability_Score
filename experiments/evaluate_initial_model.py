@@ -12,7 +12,7 @@ from torch import nn, optim
 from torchvision import datasets, transforms
 
 from utils.common import set_random_seeds, set_cuda
-from utils.dataloaders import cifar10_c_dataloader
+from utils.dataloaders import cifar_c_dataloader
 
 
 from utils.model import model_selection, train_model, save_model
@@ -26,12 +26,12 @@ from metrics.accuracy.topAccuracy import top1Accuracy
 SEED_NUMBER              = 0
 USE_CUDA                 = True
 
-DATASET_DIR              = '../datasets/CIFAR10/'
-DATASET_NAME             = "CIFAR10" # Options: "CIFAR10" "CIFAR100" "TinyImageNet"  "ImageNet"
+DATASET_DIR              = '../datasets/CIFAR100/'
+DATASET_NAME             = "CIFAR100" # Options: "CIFAR10" "CIFAR100" "TinyImageNet"  "ImageNet"
 NUM_CLASSES              = 1000 # Number of classes in dataset
 
 MODEL_CHOICE             = "resnet" # Option:"resnet" "vgg"
-MODEL_VARIANT            = "resnet18" # Common Options: "resnet18" "vgg11" For more options explore files in models to find the different options.
+MODEL_VARIANT            = "resnet26" # Common Options: "resnet18" "vgg11" For more options explore files in models to find the different options.
 
 MODEL_DIR                = "../models/" + MODEL_CHOICE
 MODEL_SELECTION_FLAG     = 2 # create an untrained model = 0, start from a pytorch trained model = 1, start from a previously saved local model = 2
@@ -78,7 +78,7 @@ def main():
             _, testloader = pytorch_dataloader(dataset_name=DATASET_NAME, dataset_dir=DATASET_DIR, images_size=32, batch_size=64)
         else:
             # load noisy dataset
-            _,testloader, _, _    = cifar10_c_dataloader(NOISE_SEVERITY, noise_type)
+            _,testloader, _, _    = cifar_c_dataloader(NOISE_SEVERITY, noise_type, DATASET_NAME)
         
         print("Progress: Dataset Loaded.")
 
@@ -95,7 +95,7 @@ def main():
     ax.bar(NOISE_TYPES_ARRAY, eval_accuracy_array, color = 'k', width = 0.25)
 
     plt.ylabel("Evaluation Accuracy")
-    plt.savefig("AccuracyVSnoisy.pdf")
+    plt.savefig("AccuracyVSnoise_"+DATASET_NAME+"_"+MODEL_VARIANT+".pdf")
 
    
     # print("FP32 evaluation accuracy: {:.3f}".format(eval_accuracy))

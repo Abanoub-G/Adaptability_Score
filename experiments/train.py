@@ -12,7 +12,6 @@ from torch import nn, optim
 from torchvision import datasets, transforms
 
 from utils.common import set_random_seeds, set_cuda
-from utils.dataloaders import cifar10_c_dataloader
 
 
 from utils.model import model_selection, train_model, save_model
@@ -41,8 +40,8 @@ SAVED_MODEL_FILEPATH     = os.path.join(MODEL_DIR, SAVED_MODEL_FILENAME)
 
 TRAINED_MODEL_FILENAME   = MODEL_VARIANT +"_"+DATASET_NAME+".pt"
 
-NUM_EPOCHS               = 5
-LEARNING_RATE            = 1e-3
+NUM_EPOCHS               = 10
+LEARNING_RATE            = 1e-4
 
 
 # Fix seeds to allow for repeatable results 

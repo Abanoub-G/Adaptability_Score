@@ -13,7 +13,7 @@ from torch import nn, optim
 from torchvision import datasets, transforms
 
 from utils.common import set_random_seeds, set_cuda, logs
-from utils.dataloaders import pytorch_dataloader, cifar10_c_dataloader, samples_dataloader_iterative, augmented_samples_dataloader_iterative
+from utils.dataloaders import pytorch_dataloader, cifar_c_dataloader, samples_dataloader_iterative, augmented_samples_dataloader_iterative
 
 from utils.model import model_selection
 
@@ -30,8 +30,8 @@ from math import log
 SEED_NUMBER              = 0
 USE_CUDA                 = True
 
-DATASET_DIR              = '../datasets/CIFAR10/'
-DATASET_NAME             = "CIFAR10" # Options: "CIFAR10" "CIFAR100" "TinyImageNet"  "ImageNet"
+DATASET_DIR              = '../datasets/CIFAR100/'
+DATASET_NAME             = "CIFAR100" # Options: "CIFAR10" "CIFAR100" "TinyImageNet"  "ImageNet"
 NUM_CLASSES              = 1000 # Number of classes in dataset
 
 MODEL_CHOICE             = "resnet" # Option:"resnet" "vgg"
@@ -44,20 +44,21 @@ MODEL_FILENAME     = MODEL_VARIANT +"_"+DATASET_NAME+".pt"
 MODEL_FILEPATH     = os.path.join(MODEL_DIR, MODEL_FILENAME)
 
 
-# NOISE_TYPES_ARRAY = ["brightness","contrast","defocus_blur",
-# 					"elastic_transform","fog","frost","gaussian_blur",
-# 					"gaussian_noise", "glass_blur", "impulse_noise",
-# 					"jpeg_compression", "motion_blur", "pixelate", 
-# 					"saturate", "shot_noise", "snow", "spatter", 
-# 					"speckle_noise", "zoom_blur"]
+NOISE_TYPES_ARRAY = ["brightness","contrast","defocus_blur",
+					"elastic_transform","fog","frost","gaussian_blur",
+					"gaussian_noise", "glass_blur", "impulse_noise",
+					"jpeg_compression", "motion_blur", "pixelate", 
+					"saturate", "shot_noise", "snow", "spatter", 
+					"speckle_noise", "zoom_blur"]
 
+NOISE_TYPES_ARRAY = ["brightness","contrast","defocus_blur"]
 # NOISE_TYPES_ARRAY = ["contrast","motion_blur","fog"]
 
-NOISE_TYPES_ARRAY = ["impulse_noise"]
+# NOISE_TYPES_ARRAY = ["impulse_noise"]
 
 NOISE_SEVERITY 	  = 5 # Options from 1 to 5
 
-MAX_SAMPLES_NUMBER = 220
+MAX_SAMPLES_NUMBER = 120 #220
 N_T_STEP = 25 #16
 
 def retrain(model, testloader, N_T_trainloader_c, N_T_testloader_c, device, fisher_dict, optpar_dict, num_retrain_epochs, lambda_retrain, lr_retrain, zeta):
@@ -143,7 +144,7 @@ def main():
 			testloader_c = testloader
 		else:
 			# load noisy dataset
-			trainloader_c, testloader_c, noisy_images, noisy_labels    = cifar10_c_dataloader(NOISE_SEVERITY, noise_type)
+			trainloader_c, testloader_c, noisy_images, noisy_labels    = cifar_c_dataloader(NOISE_SEVERITY, noise_type, DATASET_NAME)
 			# print("shape of noisy images = ", np.shape(noisy_images))
 			# print("shape of noisy labels = ", np.shape(noisy_labels))
 		
@@ -243,7 +244,7 @@ def main():
 		# Log
 		logs_dic[noise_type] = N_T_vs_A_T
 
-	results_log.write_file("exp68.txt")
+	results_log.write_file("exp70_temp.txt")
 
 
 
