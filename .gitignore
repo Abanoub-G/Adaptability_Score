@@ -10,6 +10,10 @@ datasets/MNIST/*
 datasets/ImageNet/*
 datasets/TinyImageNet/*
 
+# Other
+experiments/resnet18_imagenet_fisher.pkl
+experiments/resnet18_imagenet_optpar.pkl
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

@@ -22,22 +22,22 @@ urls = [('blur.tar', 'https://zenodo.org/record/2235448/files/blur.tar?download=
         # ('extra.tar', 'https://zenodo.org/record/2235448/files/extra.tar?download=1')
         ]
 
-noise_sets = [["defocus_blur", "glass_blur", "motion_blur", "zoom_blur"],
-              []
+# noise_sets = [["defocus_blur", "glass_blur", "motion_blur", "zoom_blur"],
+#               []
                
-               ]
+#                ]
 
-counter =-1
+# counter =-1
 for file, url in urls:
-   if not os.path.isfile(path+ file):
-      wget.download(url, path)
-   else:
-      print("This file exists: " + path+ file)
+  if not os.path.isfile(path+ file):
+    wget.download(url, path)
+  else:
+    print("This file exists: " + path+ file)
 
 
 
-   counter += 1
-   # if not os.path.isdir(path+file[:-4]):
-   #    my_tar = tarfile.open(path+file)
-   #    my_tar.extractall(path)
-   #    my_tar.close()
+for file, url in urls:
+  # if not os.path.isdir(path+file):
+  my_tar = tarfile.open(path+file)
+  my_tar.extractall(path)
+  my_tar.close()

@@ -148,6 +148,68 @@ def cifar_c_dataloader(severity, noise_type="gaussian_noise", dataset_choice ="C
     plt.savefig("temp.png")
     # input("press enter to conti")
 
+    return trainloader_c, testloader_c, images, labels
+
+def imagenet_c_dataloader(severity, noise_type="gaussian_noise"):
+
+    # labels = torch.from_numpy(np.load("../datasets/ImageNet/ImageNet-C/labels.npy"))
+    # test_images = torch.from_numpy(np.load("../datasets/ImageNet/ImageNet-C/"+noise_type+"/"+str(severity)+".npy"))
+    
+    
+    # labels = labels.to(torch.long)
+    # images_size = 256  # 32 x 32
+
+    # Filter based on Severity
+    # labels = labels[10000*(severity-1):(10000*(severity))]
+    # images = test_images[10000*(severity-1):(10000*(severity))]
+
+    # # Rearranging tensor for corrupte data to match format of un-corrupt.
+    # images = images.reshape((images.size()[0], images_size, images_size,3))
+    # images = np.transpose(images,(0,3,1,2)) # Custom transpose needed for ouput of courrputed and non courrputed to match (found emprically)
+    
+
+    # images = images.float()/255
+
+    # # test_set_c = torch.utils.data.TensorDataset(images,labels)
+    # # testloader_c = torch.utils.data.DataLoader(test_set_c, batch_size=64, shuffle=False)
+
+    # train_set_c = CustomTensorDataset(tensors=(images, labels), transform=custom_train_transform)
+    # trainloader_c = torch.utils.data.DataLoader(train_set_c, batch_size=64, shuffle=False)
+
+    # test_set_c = CustomTensorDataset(tensors=(images, labels), transform=custom_test_transform)
+    # testloader_c = torch.utils.data.DataLoader(test_set_c, batch_size=64, shuffle=False)
+
+    # image, label = train_set_c[0]
+    # image = image.numpy()
+    # image = image.transpose((1, 2, 0))
+    # plt.imshow(image)
+    # plt.savefig("temp.png")
+    # input("press enter to conti")
+
+    dataset_root = "../datasets/ImageNet/ImageNet-C/"+noise_type+"/"+str(severity)+"/" #"../../datasets/ImageNet/imagenet-object-localization-challenge/ILSVRC/Data/CLS-LOC"
+    
+    mean = (0.485, 0.456, 0.406)
+    std = (0.229, 0.224, 0.225)
+
+    transform = transforms.Compose(
+                [
+                    transforms.Resize(256),
+                    transforms.CenterCrop(224),
+                    transforms.ToTensor(),
+                    transforms.Normalize(mean, std),
+                ]
+            )
+
+    train_set  = torchvision.datasets.ImageFolder(root=dataset_root, transform=transform)#ImageNetKaggle(dataset_root, "train", transform)
+    test_set   = torchvision.datasets.ImageFolder(root=dataset_root, transform=transform)#ImageNetKaggle(dataset_root, "val", transform)
+
+    print(train_set)
+
+
+    train_loader = torch.utils.data.DataLoader(dataset=train_set, batch_size=64, shuffle=True)
+
+    test_loader = torch.utils.data.DataLoader(dataset=test_set, batch_size=64, shuffle=True)
+
 
 
     return trainloader_c, testloader_c, images, labels
@@ -198,12 +260,30 @@ def pytorch_dataloader(dataset_name="", dataset_dir="", images_size=32, batch_si
         test_set = torchvision.datasets.CIFAR10(root=dataset_dir, train=False, download=True, transform=test_transform)
     
     elif dataset_name =="CIFAR100": 
-        train_set = torchvision.datasets.CIFAR100(root=dataset_dir, train=True, download=True, transform=train_transform) 
-        test_set = torchvision.datasets.CIFAR100(root=dataset_dir, train=False, download=True, transform=test_transform)
+        train_set = torchvision.datasets.CIFAR10(root=dataset_dir, train=True, download=True, transform=train_transform) 
+        test_set = torchvision.datasets.CIFAR10(root=dataset_dir, train=False, download=True, transform=test_transform)
 
     elif dataset_name == "TinyImageNet":
         train_set = torchvision.datasets.ImageFolder(root=dataset_dir+"tiny-imagenet-200/train", transform=train_transform)
         test_set = torchvision.datasets.ImageFolder(root=dataset_dir+"tiny-imagenet-200/val", transform=test_transform)
+    
+    elif dataset_name =="ImageNet":
+        dataset_root =  dataset_dir #"../../datasets/ImageNet/imagenet-object-localization-challenge/ILSVRC/Data/CLS-LOC"
+        mean = (0.485, 0.456, 0.406)
+        std = (0.229, 0.224, 0.225)
+
+        transform = transforms.Compose(
+                    [
+                        transforms.Resize(256),
+                        transforms.CenterCrop(224),
+                        transforms.ToTensor(),
+                        transforms.Normalize(mean, std),
+                    ]
+                )
+
+        train_set  = torchvision.datasets.ImageFolder(root=dataset_root+"/train", transform=transform)#ImageNetKaggle(dataset_root, "train", transform)
+        test_set   = torchvision.datasets.ImageFolder(root=dataset_root+"/val", transform=transform)#ImageNetKaggle(dataset_root, "val", transform)
+
 
     else:
         print("ERROR: dataset name is not integrated into NETZIP yet.")

@@ -60,7 +60,7 @@ def main():
     device = set_cuda(USE_CUDA)
 
     # Setup dataset
-    trainloader, testloader = pytorch_dataloader(dataset_name=DATASET_NAME, dataset_dir=DATASET_DIR, images_size=32, batch_size=64)
+    trainloader, testloader = pytorch_dataloader(dataset_name=DATASET_NAME, dataset_dir=DATASET_DIR, images_size=256, batch_size=64)
     print("Progress: Dataset Loaded.")
     # images_size = 32
     # transform = transforms.Compose([
