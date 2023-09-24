@@ -94,7 +94,7 @@ first_run_flag = True
 last_N_T = 0
 
 plt. clf()
-plt.plot([0, 600], [Baseline_accuracy*100, Baseline_accuracy*100], label="Baseline CIFAR-10", linestyle="--", color="grey")
+# plt.plot([0, 600], [Baseline_accuracy*100, Baseline_accuracy*100], label="Baseline CIFAR-10", linestyle="--", color="grey")
 
 counter = -1
 for noise_type in ["contrast","defocus_blur", "fog", "zoom_blur"]:

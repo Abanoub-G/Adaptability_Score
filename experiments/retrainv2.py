@@ -53,7 +53,7 @@ NOISE_TYPES_ARRAY = ["brightness","contrast","defocus_blur",
 					"saturate", "shot_noise", "snow", "spatter", 
 					"speckle_noise", "zoom_blur"]
 
-NOISE_TYPES_ARRAY = ["brightness","contrast","defocus_blur"]
+NOISE_TYPES_ARRAY = ["jpeg_compression", "motion_blur", "pixelate", "shot_noise", "snow", "zoom_blur"]
 # NOISE_TYPES_ARRAY = ["contrast","motion_blur","fog"]
 
 NOISE_TYPES_ARRAY = ["impulse_noise"]
