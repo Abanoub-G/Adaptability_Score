@@ -30,8 +30,8 @@ from math import log
 SEED_NUMBER              = 0
 USE_CUDA                 = True
 
-DATASET_DIR              = '../datasets/CIFAR100/'
-DATASET_NAME             = "CIFAR100" # Options: "CIFAR10" "CIFAR100" "TinyImageNet"  "ImageNet"
+DATASET_DIR              = '../datasets/TinyImageNet/'
+DATASET_NAME             = "TinyImageNet" # Options: "CIFAR10" "CIFAR100" "TinyImageNet"  "ImageNet"
 NUM_CLASSES              = 1000 # Number of classes in dataset
 
 MODEL_CHOICE             = "resnet" # Option:"resnet" "vgg"

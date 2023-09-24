@@ -8,6 +8,7 @@ datasets/CIFAR10/*
 datasets/CIFAR100/*
 datasets/MNIST/*
 datasets/ImageNet/*
+datasets/TinyImageNet/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
