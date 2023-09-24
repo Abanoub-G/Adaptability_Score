@@ -9,6 +9,10 @@ datasets/CIFAR100/*
 datasets/MNIST/*
 datasets/ImageNet/*
 
+# Other
+experiments/resnet18_imagenet_fisher.pkl
+experiments/resnet18_imagenet_optpar.pkl
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

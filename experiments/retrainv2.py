@@ -13,7 +13,7 @@ from torch import nn, optim
 from torchvision import datasets, transforms
 
 from utils.common import set_random_seeds, set_cuda, logs
-from utils.dataloaders import pytorch_dataloader, cifar_c_dataloader, samples_dataloader_iterative, augmented_samples_dataloader_iterative
+from utils.dataloaders import pytorch_dataloader, cifar_c_dataloader, imagenet_c_dataloader, samples_dataloader_iterative, augmented_samples_dataloader_iterative
 
 from utils.model import model_selection
 
@@ -24,18 +24,20 @@ from methods.EWC import on_task_update, train_model_ewc
 import matplotlib.pyplot as plt
 from math import log
 
+import pickle
+
 # =====================================================
 # == Declarations
 # =====================================================
 SEED_NUMBER              = 0
 USE_CUDA                 = True
 
-DATASET_DIR              = '../datasets/CIFAR100/'
-DATASET_NAME             = "CIFAR100" # Options: "CIFAR10" "CIFAR100" "TinyImageNet"  "ImageNet"
+DATASET_DIR              = '../../NetZIP/datasets/ImageNet/imagenet-object-localization-challenge/ILSVRC/Data/CLS-LOC' #'../datasets/ImageNet/'
+DATASET_NAME             = "ImageNet" #"CIFAR100" # Options: "CIFAR10" "CIFAR100" "TinyImageNet"  "ImageNet"
 NUM_CLASSES              = 1000 # Number of classes in dataset
 
 MODEL_CHOICE             = "resnet" # Option:"resnet" "vgg"
-MODEL_VARIANT            = "resnet26" # Common Options: "resnet18" "vgg11" For more options explore files in models to find the different options.
+MODEL_VARIANT            = "resnet18" # Common Options: "resnet18" "vgg11" For more options explore files in models to find the different options.
 
 MODEL_DIR                = "../models/" + MODEL_CHOICE
 MODEL_SELECTION_FLAG     = 2 # create an untrained model = 0, start from a pytorch trained model = 1, start from a previously saved local model = 2
@@ -54,7 +56,7 @@ NOISE_TYPES_ARRAY = ["brightness","contrast","defocus_blur",
 NOISE_TYPES_ARRAY = ["brightness","contrast","defocus_blur"]
 # NOISE_TYPES_ARRAY = ["contrast","motion_blur","fog"]
 
-# NOISE_TYPES_ARRAY = ["impulse_noise"]
+NOISE_TYPES_ARRAY = ["impulse_noise"]
 
 NOISE_SEVERITY 	  = 5 # Options from 1 to 5
 
@@ -130,8 +132,34 @@ def main():
 	optpar_dict = {}
 
 	optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9, weight_decay=1e-5)
-	fisher_dict, optpar_dict = on_task_update(0, trainloader, model, optimizer, fisher_dict, optpar_dict, device)
-	print("PROGRESS: Calculated Fisher matrix")
+	
+	save_dict = True
+	load_dict = False
+
+	if load_dict == True and DATASET_NAME == "ImageNet":
+		with open("resnet18_imagenet_fisher.pkl", 'rb') as file:
+			fisher_dict = pickle.load(file)
+
+		with open("resnet18_imagenet_optpar.pkl", 'rb') as file:
+			optpar_dict = pickle.load(file)
+
+		print("PROGRESS: Calculated Fisher loaded")
+
+	else:
+		fisher_dict, optpar_dict = on_task_update(0, trainloader, model, optimizer, fisher_dict, optpar_dict, device)
+		print("PROGRESS: Calculated Fisher matrix")
+
+		if save_dict == True and DATASET_NAME == "ImageNet":
+
+			with open("resnet18_imagenet_fisher.pkl", 'wb') as file:
+				pickle.dump(fisher_dict, file)
+
+			with open("resnet18_imagenet_optpar.pkl", 'wb') as file:
+				pickle.dump(optpar_dict, file)
+
+			print("PROGRESS: Saved Fisher matrix")
+
+
 
 	# ========================================
 	# == Load Noisy Data
@@ -144,7 +172,11 @@ def main():
 			testloader_c = testloader
 		else:
 			# load noisy dataset
-			trainloader_c, testloader_c, noisy_images, noisy_labels    = cifar_c_dataloader(NOISE_SEVERITY, noise_type, DATASET_NAME)
+			if DATASET_NAME == "CIFAR10" or DATASET_NAME == "CIFAR100":
+				trainloader_c, testloader_c, noisy_images, noisy_labels    = cifar_c_dataloader(NOISE_SEVERITY, noise_type, DATASET_NAME)
+
+			elif DATASET_NAME == "ImageNet":
+				trainloader_c, testloader_c, noisy_images, noisy_labels    = imagenet_c_dataloader(NOISE_SEVERITY, noise_type)
 			# print("shape of noisy images = ", np.shape(noisy_images))
 			# print("shape of noisy labels = ", np.shape(noisy_labels))
 		
@@ -244,7 +276,7 @@ def main():
 		# Log
 		logs_dic[noise_type] = N_T_vs_A_T
 
-	results_log.write_file("exp70_temp.txt")
+	results_log.write_file("exp80_temp.txt")
 
 
 
