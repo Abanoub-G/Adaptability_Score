@@ -13,6 +13,9 @@ datasets/TinyImageNet/*
 # Other
 experiments/resnet18_imagenet_fisher.pkl
 experiments/resnet18_imagenet_optpar.pkl
+experiments/resnet18_TinyImageNet_fisher.pkl
+experiments/resnet18_TinyImageNet_optpar.pkl
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

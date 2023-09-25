@@ -13,7 +13,7 @@ from torch import nn, optim
 from torchvision import datasets, transforms
 
 from utils.common import set_random_seeds, set_cuda, logs
-from utils.dataloaders import pytorch_dataloader, cifar_c_dataloader, imagenet_c_dataloader, samples_dataloader_iterative, augmented_samples_dataloader_iterative
+from utils.dataloaders import pytorch_dataloader, cifar_c_dataloader, imagenet_c_dataloader, samples_dataloader_iterative, augmented_samples_dataloader_iterative, augmented_samples_dataloader_iterative_imagenet
 
 from utils.model import model_selection
 
@@ -33,7 +33,7 @@ SEED_NUMBER              = 0
 USE_CUDA                 = True
 
 
-DATASET_DIR              = '../datasets/TinyImageNet/' # '../../NetZIP/datasets/ImageNet/imagenet-object-localization-challenge/ILSVRC/Data/CLS-LOC' 
+DATASET_DIR              = '../../NetZIP/datasets/TinyImageNet/' #'../datasets/CIFAR100/' # '../../NetZIP/datasets/ImageNet/imagenet-object-localization-challenge/ILSVRC/Data/CLS-LOC' 
 DATASET_NAME             = "TinyImageNet" # Options: "CIFAR10" "CIFAR100" "TinyImageNet"  "ImageNet"
 
 NUM_CLASSES              = 1000 # Number of classes in dataset
@@ -135,14 +135,14 @@ def main():
 
 	optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9, weight_decay=1e-5)
 	
-	save_dict = True
-	load_dict = False
+	save_dict = False
+	load_dict = True
 
-	if load_dict == True and DATASET_NAME == "ImageNet":
-		with open("resnet18_imagenet_fisher.pkl", 'rb') as file:
+	if load_dict == True and (DATASET_NAME == "ImageNet" or DATASET_NAME == "TinyImageNet"):
+		with open("resnet18_"+DATASET_NAME+"_fisher.pkl", 'rb') as file:
 			fisher_dict = pickle.load(file)
 
-		with open("resnet18_imagenet_optpar.pkl", 'rb') as file:
+		with open("resnet18_"+DATASET_NAME+"_optpar.pkl", 'rb') as file:
 			optpar_dict = pickle.load(file)
 
 		print("PROGRESS: Calculated Fisher loaded")
@@ -151,12 +151,12 @@ def main():
 		fisher_dict, optpar_dict = on_task_update(0, trainloader, model, optimizer, fisher_dict, optpar_dict, device)
 		print("PROGRESS: Calculated Fisher matrix")
 
-		if save_dict == True and DATASET_NAME == "ImageNet":
+		if save_dict == True and (DATASET_NAME == "ImageNet" or DATASET_NAME == "TinyImageNet"):
 
-			with open("resnet18_imagenet_fisher.pkl", 'wb') as file:
+			with open("resnet18_"+DATASET_NAME+"_fisher.pkl", 'wb') as file:
 				pickle.dump(fisher_dict, file)
 
-			with open("resnet18_imagenet_optpar.pkl", 'wb') as file:
+			with open("resnet18_"+DATASET_NAME+"_optpar.pkl", 'wb') as file:
 				pickle.dump(optpar_dict, file)
 
 			print("PROGRESS: Saved Fisher matrix")
@@ -178,7 +178,10 @@ def main():
 				trainloader_c, testloader_c, noisy_images, noisy_labels    = cifar_c_dataloader(NOISE_SEVERITY, noise_type, DATASET_NAME)
 
 			elif DATASET_NAME == "ImageNet":
-				trainloader_c, testloader_c, noisy_images, noisy_labels    = imagenet_c_dataloader(NOISE_SEVERITY, noise_type)
+				trainloader_c, testloader_c, train_set, test_set     = imagenet_c_dataloader(NOISE_SEVERITY, noise_type)
+
+			elif DATASET_NAME == "TinyImageNet":
+				trainloader_c, testloader_c,  train_set, test_set    = imagenet_c_dataloader(NOISE_SEVERITY, noise_type, tiny_imagenet=True)
 			# print("shape of noisy images = ", np.shape(noisy_images))
 			# print("shape of noisy labels = ", np.shape(noisy_labels))
 		
@@ -198,7 +201,12 @@ def main():
 			print("++++++++++++++")
 			print("N_T = ", N_T)
 			print("Noise Type = ", noise_type) 
-			N_T_trainloader_c, N_T_testloader_c, samples_indices_array = augmented_samples_dataloader_iterative(N_T, noisy_images, noisy_labels, samples_indices_array, N_T_STEP)
+			if DATASET_NAME == "CIFAR10" or DATASET_NAME == "CIFAR100":
+				N_T_trainloader_c, N_T_testloader_c, samples_indices_array = augmented_samples_dataloader_iterative(N_T, noisy_images, noisy_labels, samples_indices_array, N_T_STEP)
+			
+			elif DATASET_NAME == "ImageNet" or DATASET_NAME == "TinyImageNet":
+				N_T_trainloader_c, N_T_testloader_c, samples_indices_array = augmented_samples_dataloader_iterative_imagenet(N_T, train_set, test_set, samples_indices_array, N_T_STEP)
+
 
 
 			# ========================================	

@@ -150,69 +150,55 @@ def cifar_c_dataloader(severity, noise_type="gaussian_noise", dataset_choice ="C
 
     return trainloader_c, testloader_c, images, labels
 
-def imagenet_c_dataloader(severity, noise_type="gaussian_noise"):
+def imagenet_c_dataloader(severity, noise_type="gaussian_noise", tiny_imagenet=False):
 
-    # labels = torch.from_numpy(np.load("../datasets/ImageNet/ImageNet-C/labels.npy"))
-    # test_images = torch.from_numpy(np.load("../datasets/ImageNet/ImageNet-C/"+noise_type+"/"+str(severity)+".npy"))
-    
-    
-    # labels = labels.to(torch.long)
-    # images_size = 256  # 32 x 32
-
-    # Filter based on Severity
-    # labels = labels[10000*(severity-1):(10000*(severity))]
-    # images = test_images[10000*(severity-1):(10000*(severity))]
-
-    # # Rearranging tensor for corrupte data to match format of un-corrupt.
-    # images = images.reshape((images.size()[0], images_size, images_size,3))
-    # images = np.transpose(images,(0,3,1,2)) # Custom transpose needed for ouput of courrputed and non courrputed to match (found emprically)
-    
-
-    # images = images.float()/255
-
-    # # test_set_c = torch.utils.data.TensorDataset(images,labels)
-    # # testloader_c = torch.utils.data.DataLoader(test_set_c, batch_size=64, shuffle=False)
-
-    # train_set_c = CustomTensorDataset(tensors=(images, labels), transform=custom_train_transform)
-    # trainloader_c = torch.utils.data.DataLoader(train_set_c, batch_size=64, shuffle=False)
-
-    # test_set_c = CustomTensorDataset(tensors=(images, labels), transform=custom_test_transform)
-    # testloader_c = torch.utils.data.DataLoader(test_set_c, batch_size=64, shuffle=False)
-
-    # image, label = train_set_c[0]
-    # image = image.numpy()
-    # image = image.transpose((1, 2, 0))
-    # plt.imshow(image)
-    # plt.savefig("temp.png")
-    # input("press enter to conti")
-
-    dataset_root = "../datasets/ImageNet/ImageNet-C/"+noise_type+"/"+str(severity)+"/" #"../../datasets/ImageNet/imagenet-object-localization-challenge/ILSVRC/Data/CLS-LOC"
-    
-    mean = (0.485, 0.456, 0.406)
-    std = (0.229, 0.224, 0.225)
-
-    transform = transforms.Compose(
-                [
-                    transforms.Resize(256),
-                    transforms.CenterCrop(224),
+    if tiny_imagenet == True:
+        dataset_root = "../datasets/TinyImageNet/Tiny-ImageNet-C/"+noise_type+"/"+str(severity)+"/"
+        train_transform = transforms.Compose([
+                    transforms.Resize((32, 32)),
+                    transforms.RandomCrop(32, padding=4),
+                    transforms.RandomHorizontalFlip(),
                     transforms.ToTensor(),
-                    transforms.Normalize(mean, std),
-                ]
-            )
+                    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+                  ])
 
-    train_set  = torchvision.datasets.ImageFolder(root=dataset_root, transform=transform)#ImageNetKaggle(dataset_root, "train", transform)
-    test_set   = torchvision.datasets.ImageFolder(root=dataset_root, transform=transform)#ImageNetKaggle(dataset_root, "val", transform)
+        test_transform = transforms.Compose([
+                    transforms.Resize((32, 32)),
+                    transforms.ToTensor(),
+                    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+                  ])
+    else:
+        dataset_root = "../datasets/ImageNet/ImageNet-C/"+noise_type+"/"+str(severity)+"/" #"../../datasets/ImageNet/imagenet-object-localization-challenge/ILSVRC/Data/CLS-LOC"
+        
+        mean = (0.485, 0.456, 0.406)
+        std = (0.229, 0.224, 0.225)
 
-    print(train_set)
+        train_transform = transforms.Compose([
+                        transforms.Resize(256),
+                        transforms.CenterCrop(224),
+                        transforms.RandomHorizontalFlip(),
+                        transforms.ToTensor(),
+                        transforms.Normalize(mean, std),
+                    ])
+
+        test_transform = transforms.Compose([
+                        transforms.Resize(256),
+                        transforms.CenterCrop(224),
+                        transforms.ToTensor(),
+                        transforms.Normalize(mean, std),
+                    ])
+
+    train_set  = torchvision.datasets.ImageFolder(root=dataset_root, transform=train_transform)#ImageNetKaggle(dataset_root, "train", transform)
+    test_set   = torchvision.datasets.ImageFolder(root=dataset_root, transform=test_transform)#ImageNetKaggle(dataset_root, "val", transform)
 
 
-    train_loader = torch.utils.data.DataLoader(dataset=train_set, batch_size=64, shuffle=True)
 
-    test_loader = torch.utils.data.DataLoader(dataset=test_set, batch_size=64, shuffle=True)
+    trainloader_c = torch.utils.data.DataLoader(dataset=train_set, batch_size=64, shuffle=True)
+    testloader_c = torch.utils.data.DataLoader(dataset=test_set, batch_size=64, shuffle=True)
 
 
 
-    return trainloader_c, testloader_c, images, labels
+    return trainloader_c, testloader_c, train_set, test_set
 
 def mnist_c_dataloader(noise_type="gaussian_noise"):
 
@@ -264,6 +250,15 @@ def pytorch_dataloader(dataset_name="", dataset_dir="", images_size=32, batch_si
         test_set = torchvision.datasets.CIFAR10(root=dataset_dir, train=False, download=True, transform=test_transform)
 
     elif dataset_name == "TinyImageNet":
+
+        # train_transform = transforms.Compose([
+        #                 transforms.ToTensor(),
+        #                 ])
+
+        # test_transform = transforms.Compose([
+        #                 transforms.ToTensor(),
+        #                 ])
+
         train_set = torchvision.datasets.ImageFolder(root=dataset_dir+"tiny-imagenet-200/train", transform=train_transform)
         test_set = torchvision.datasets.ImageFolder(root=dataset_dir+"tiny-imagenet-200/val", transform=test_transform)
     
@@ -272,17 +267,22 @@ def pytorch_dataloader(dataset_name="", dataset_dir="", images_size=32, batch_si
         mean = (0.485, 0.456, 0.406)
         std = (0.229, 0.224, 0.225)
 
-        transform = transforms.Compose(
-                    [
+        train_transform = transforms.Compose([
                         transforms.Resize(256),
                         transforms.CenterCrop(224),
                         transforms.ToTensor(),
                         transforms.Normalize(mean, std),
-                    ]
-                )
+                    ])
 
-        train_set  = torchvision.datasets.ImageFolder(root=dataset_root+"/train", transform=transform)#ImageNetKaggle(dataset_root, "train", transform)
-        test_set   = torchvision.datasets.ImageFolder(root=dataset_root+"/val", transform=transform)#ImageNetKaggle(dataset_root, "val", transform)
+        test_transform = transforms.Compose([
+                        transforms.Resize(256),
+                        transforms.CenterCrop(224),
+                        transforms.ToTensor(),
+                        transforms.Normalize(mean, std),
+                    ])
+
+        train_set  = torchvision.datasets.ImageFolder(root=dataset_root+"/train", transform=train_transform)#ImageNetKaggle(dataset_root, "train", transform)
+        test_set   = torchvision.datasets.ImageFolder(root=dataset_root+"/val", transform=test_transform)#ImageNetKaggle(dataset_root, "val", transform)
 
 
     else:
@@ -348,6 +348,39 @@ def augmented_samples_dataloader_iterative(N_T, noisy_images, noisy_labels, samp
 
     N_T_test_set_c = CustomTensorDataset(tensors=(selected_noisy_images, selected_noisy_labels), transform=custom_test_transform)
     N_T_testloader_c = torch.utils.data.DataLoader(N_T_test_set_c, batch_size=64, shuffle=False)
+
+
+    # Display some images to visualise transforms
+    show_pics_samples = True
+    if show_pics_samples == True:
+        for i, data in enumerate(N_T_trainloader_c):
+            x, y = data  
+            imshow(torchvision.utils.make_grid(x, 4), "train_transforms.png" , title='train_Transforms')
+            break
+        for i, data in enumerate(N_T_testloader_c):
+            x, y = data  
+            imshow(torchvision.utils.make_grid(x, 4), "test_transforms.png", title='test_Transforms')
+            break
+
+    return N_T_trainloader_c, N_T_testloader_c, samples_indices_array
+
+def augmented_samples_dataloader_iterative_imagenet(N_T, train_set, test_set, samples_indices_array, N_T_step):
+    # Get length of images
+    max_num_noisy_samples = len(test_set)-1
+
+    for _ in range(N_T_step): 
+        # Select a random number from the max number of images
+        i = random.randint(0,max_num_noisy_samples)
+        samples_indices_array.append(i)
+
+    selected_train_subset = torch.utils.data.Subset(train_set, samples_indices_array)
+    selected_test_subset = torch.utils.data.Subset(test_set, samples_indices_array)
+    
+    # selected_noisy_images = np.take(noisy_images,samples_indices_array, axis=0)
+    # selected_noisy_labels = np.take(noisy_labels,samples_indices_array, axis=0)
+
+    N_T_trainloader_c = torch.utils.data.DataLoader(selected_train_subset, batch_size=64, shuffle=False)
+    N_T_testloader_c = torch.utils.data.DataLoader(selected_test_subset, batch_size=64, shuffle=False)
 
 
     # Display some images to visualise transforms
