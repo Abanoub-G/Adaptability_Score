@@ -224,7 +224,7 @@ def mnist_c_dataloader(noise_type="gaussian_noise"):
 
    return testloader_c, trainloader_c
 
-def pytorch_dataloader(dataset_name="", dataset_dir="", images_size=32, batch_size=64):
+def pytorch_dataloader(dataset_name="", dataset_dir="", images_size=32, batch_size=64, retraining_imagenet = False):
 
     train_transform = transforms.Compose([
                 transforms.Resize((images_size, images_size)),
@@ -244,10 +244,12 @@ def pytorch_dataloader(dataset_name="", dataset_dir="", images_size=32, batch_si
     if dataset_name == "CIFAR10":
         train_set = torchvision.datasets.CIFAR10(root=dataset_dir, train=True, download=True, transform=train_transform) 
         test_set = torchvision.datasets.CIFAR10(root=dataset_dir, train=False, download=True, transform=test_transform)
-    
+        small_test_set = test_set
+
     elif dataset_name =="CIFAR100": 
         train_set = torchvision.datasets.CIFAR10(root=dataset_dir, train=True, download=True, transform=train_transform) 
         test_set = torchvision.datasets.CIFAR10(root=dataset_dir, train=False, download=True, transform=test_transform)
+        small_test_set = test_set
 
     elif dataset_name == "TinyImageNet":
 
@@ -261,7 +263,8 @@ def pytorch_dataloader(dataset_name="", dataset_dir="", images_size=32, batch_si
 
         train_set = torchvision.datasets.ImageFolder(root=dataset_dir+"tiny-imagenet-200/train", transform=train_transform)
         test_set = torchvision.datasets.ImageFolder(root=dataset_dir+"tiny-imagenet-200/val", transform=test_transform)
-    
+        small_test_set = test_set
+
     elif dataset_name =="ImageNet":
         dataset_root =  dataset_dir #"../../datasets/ImageNet/imagenet-object-localization-challenge/ILSVRC/Data/CLS-LOC"
         mean = (0.485, 0.456, 0.406)
@@ -284,6 +287,9 @@ def pytorch_dataloader(dataset_name="", dataset_dir="", images_size=32, batch_si
         train_set  = torchvision.datasets.ImageFolder(root=dataset_root+"/train", transform=train_transform)#ImageNetKaggle(dataset_root, "train", transform)
         test_set   = torchvision.datasets.ImageFolder(root=dataset_root+"/val", transform=test_transform)#ImageNetKaggle(dataset_root, "val", transform)
 
+        # Create a smaller subset of test images to speedup evaluation during retraining
+        samples_indices_array = np.random.randint(0, 49999, size=1000)
+        small_test_set = torch.utils.data.Subset(test_set, samples_indices_array) 
 
     else:
         print("ERROR: dataset name is not integrated into NETZIP yet.")
@@ -293,7 +299,9 @@ def pytorch_dataloader(dataset_name="", dataset_dir="", images_size=32, batch_si
 
     test_loader = torch.utils.data.DataLoader(dataset=test_set, batch_size=64, shuffle=True)
 
-    return train_loader, test_loader
+    small_test_loader = torch.utils.data.DataLoader(dataset=small_test_set, batch_size=64, shuffle=True)
+
+    return train_loader, test_loader, small_test_loader
 
 
 def samples_dataloader(N_T, noisy_images, noisy_labels):

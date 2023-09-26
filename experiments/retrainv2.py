@@ -33,8 +33,8 @@ SEED_NUMBER              = 0
 USE_CUDA                 = True
 
 
-DATASET_DIR              = '../../NetZIP/datasets/TinyImageNet/' #'../datasets/CIFAR100/' # '../../NetZIP/datasets/ImageNet/imagenet-object-localization-challenge/ILSVRC/Data/CLS-LOC' 
-DATASET_NAME             = "TinyImageNet" # Options: "CIFAR10" "CIFAR100" "TinyImageNet"  "ImageNet"
+DATASET_DIR              = '../../NetZIP/datasets/ImageNet/imagenet-object-localization-challenge/ILSVRC/Data/CLS-LOC' #'../../NetZIP/datasets/TinyImageNet/' #'../datasets/CIFAR100/' 
+DATASET_NAME             = "ImageNet" # Options: "CIFAR10" "CIFAR100" "TinyImageNet"  "ImageNet"
 
 NUM_CLASSES              = 1000 # Number of classes in dataset
 
@@ -55,17 +55,23 @@ NOISE_TYPES_ARRAY = ["brightness","contrast","defocus_blur",
 					"saturate", "shot_noise", "snow", "spatter", 
 					"speckle_noise", "zoom_blur"]
 
-NOISE_TYPES_ARRAY = ["jpeg_compression", "motion_blur", "pixelate", "shot_noise", "snow", "zoom_blur"]
+NOISE_TYPES_ARRAY = ["elastic_transform","fog","frost",
+					"gaussian_noise", "glass_blur", "impulse_noise",
+					"jpeg_compression", "motion_blur", "pixelate", 
+					"shot_noise", "snow", "zoom_blur"]
+# NOISE_TYPES_ARRAY = ["elastic_transform","fog","frost","gaussian_blur"]
+# NOISE_TYPES_ARRAY = ["gaussian_noise", "glass_blur", "impulse_noise"]
+# NOISE_TYPES_ARRAY = ["jpeg_compression", "motion_blur", "pixelate", "shot_noise", "snow", "zoom_blur"]
 # NOISE_TYPES_ARRAY = ["contrast","motion_blur","fog"]
 
-NOISE_TYPES_ARRAY = ["impulse_noise"]
+# NOISE_TYPES_ARRAY = ["impulse_noise"]
 
 NOISE_SEVERITY 	  = 5 # Options from 1 to 5
 
 MAX_SAMPLES_NUMBER = 120 #220
 N_T_STEP = 25 #16
 
-def retrain(model, testloader, N_T_trainloader_c, N_T_testloader_c, device, fisher_dict, optpar_dict, num_retrain_epochs, lambda_retrain, lr_retrain, zeta):
+def DIRA_retrain(model, testloader, N_T_trainloader_c, N_T_testloader_c, device, fisher_dict, optpar_dict, num_retrain_epochs, lambda_retrain, lr_retrain, zeta):
 	# Copy model for retraining
 	retrained_model = copy.deepcopy(model)
 	
@@ -120,8 +126,12 @@ def main():
 	model = model_selection(model_selection_flag=MODEL_SELECTION_FLAG, model_dir=MODEL_DIR, model_choice=MODEL_CHOICE, model_variant=MODEL_VARIANT, saved_model_filepath=MODEL_FILEPATH, num_classes=NUM_CLASSES, device=device)
 	print("Progress: Model has been setup.")
 
+	if DATASET_NAME == "ImageNet":
+		retraining_imagenet_flag = True
+	else:
+		retraining_imagenet_flag = False
 	# Setup original dataset
-	trainloader, testloader = pytorch_dataloader(dataset_name=DATASET_NAME, dataset_dir=DATASET_DIR, images_size=32, batch_size=64)
+	trainloader, testloader, small_test_loader = pytorch_dataloader(dataset_name=DATASET_NAME, dataset_dir=DATASET_DIR, images_size=32, batch_size=64, retraining_imagenet = retraining_imagenet_flag)
 	print("Progress: Dataset Loaded.")
 
 	# accuracies = []
@@ -178,7 +188,7 @@ def main():
 				trainloader_c, testloader_c, noisy_images, noisy_labels    = cifar_c_dataloader(NOISE_SEVERITY, noise_type, DATASET_NAME)
 
 			elif DATASET_NAME == "ImageNet":
-				trainloader_c, testloader_c, train_set, test_set     = imagenet_c_dataloader(NOISE_SEVERITY, noise_type)
+				trainloader_c, testloader_c, train_set, test_set     = imagenet_c_dataloader(NOISE_SEVERITY, noise_type, tiny_imagenet=False)
 
 			elif DATASET_NAME == "TinyImageNet":
 				trainloader_c, testloader_c,  train_set, test_set    = imagenet_c_dataloader(NOISE_SEVERITY, noise_type, tiny_imagenet=True)
@@ -224,12 +234,11 @@ def main():
 			SGC_flag  = False
 			CFAS_flag = False
 			EWC_flag  = True
-
 			if SGC_flag == True:
 				lr_retrain = 1e-2
 				lambda_retrain = 0
 
-				retrained_model, CFAS = retrain(model, testloader, N_T_trainloader_c, N_T_testloader_c, device, fisher_dict, optpar_dict, num_retrain_epochs, lambda_retrain, lr_retrain, zeta)
+				retrained_model, CFAS = DIRA_retrain(model, small_test_loader, N_T_trainloader_c, N_T_testloader_c, device, fisher_dict, optpar_dict, num_retrain_epochs, lambda_retrain, lr_retrain, zeta)
 				
 				# Append Data
 				temp_list_retrained_models.append(retrained_model)
@@ -241,7 +250,7 @@ def main():
 				for lr_retrain in [1e-5,1e-4,1e-3,1e-2]:
 					lambda_retrain = 0
 
-					retrained_model, CFAS = retrain(model, testloader, N_T_trainloader_c, N_T_testloader_c, device, fisher_dict, optpar_dict, num_retrain_epochs, lambda_retrain, lr_retrain, zeta)
+					retrained_model, CFAS = DIRA_retrain(model, small_test_loader, N_T_trainloader_c, N_T_testloader_c, device, fisher_dict, optpar_dict, num_retrain_epochs, lambda_retrain, lr_retrain, zeta)
 					
 					# Append Data
 					temp_list_retrained_models.append(retrained_model)
@@ -253,7 +262,7 @@ def main():
 				for lr_retrain in [1e-5,1e-4,1e-3,1e-2]:
 					for lambda_retrain in [0.25,0.5,0.75,1,2]:
 
-						retrained_model, CFAS = retrain(model, testloader, N_T_trainloader_c, N_T_testloader_c, device, fisher_dict, optpar_dict, num_retrain_epochs, lambda_retrain, lr_retrain, zeta)
+						retrained_model, CFAS = DIRA_retrain(model, small_test_loader, N_T_trainloader_c, N_T_testloader_c, device, fisher_dict, optpar_dict, num_retrain_epochs, lambda_retrain, lr_retrain, zeta)
 						
 						# Append Data
 						temp_list_retrained_models.append(retrained_model)
