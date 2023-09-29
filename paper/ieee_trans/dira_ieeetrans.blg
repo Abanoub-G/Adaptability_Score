@@ -1,0 +1,23 @@
+[0] Config.pm:304> INFO - This is Biber 2.14 (beta)
+[0] Config.pm:307> INFO - Logfile is 'dira_ieeetrans.blg'
+[46] biber:322> INFO - === Thu Sep 28, 2023, 08:12:16
+[55] Biber.pm:415> INFO - Reading 'dira_ieeetrans.bcf'
+[101] Biber.pm:943> INFO - Found 53 citekeys in bib section 0
+[110] Biber.pm:4256> INFO - Processing section 0
+[111] Utils.pm:75> INFO - Globbing data source 'dira.bib'
+[111] Utils.pm:91> INFO - Globbed data source 'dira.bib' to dira.bib
+[118] Biber.pm:4455> INFO - Looking for bibtex format file 'dira.bib' for section 0
+[121] bibtex.pm:1653> INFO - LaTeX decoding ...
+[193] bibtex.pm:1471> INFO - Found BibTeX data source 'dira.bib'
+[194] Utils.pm:293> WARN - Duplicate entry key: 'Ly2017' in file 'dira.bib', skipping ...
+[194] Utils.pm:293> WARN - Duplicate entry key: 'Martens2020' in file 'dira.bib', skipping ...
+[195] Utils.pm:293> WARN - Duplicate entry key: 'Kay1993' in file 'dira.bib', skipping ...
+[197] Utils.pm:293> WARN - Duplicate entry key: 'deng2012mnist' in file 'dira.bib', skipping ...
+[197] Utils.pm:293> WARN - Duplicate entry key: 'Xiao2017' in file 'dira.bib', skipping ...
+[503] UCollate.pm:68> INFO - Overriding locale 'en-US' defaults 'normalization = NFD' with 'normalization = prenormalized'
+[503] UCollate.pm:68> INFO - Overriding locale 'en-US' defaults 'variable = shifted' with 'variable = non-ignorable'
+[503] Biber.pm:4084> INFO - Sorting list 'nty/global//global/global' of type 'entry' with template 'nty' and locale 'en-US'
+[503] Biber.pm:4090> INFO - No sort tailoring available for locale 'en-US'
+[545] bbl.pm:652> INFO - Writing 'dira_ieeetrans.bbl' with encoding 'UTF-8'
+[568] bbl.pm:755> INFO - Output to dira_ieeetrans.bbl
+[568] Biber.pm:128> INFO - WARNINGS: 5

@@ -1,0 +1,146 @@
+\documentclass[letterpaper, 10 pt, journal, twoside]{IEEEtran}
+\IEEEoverridecommandlockouts
+% \input{archive/main.config.tex}
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{soul}
+\usepackage[dvipsnames]{xcolor}
+\hyphenation{op-tical net-works semi-conduc-tor}
+\usepackage{xcolor,listings}
+\usepackage{textcomp}
+\usepackage{todonotes}
+\lstset{upquote=true}
+\usepackage{array}
+% \usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{relsize}
+\usepackage{amssymb}
+\usepackage{color}
+\usepackage{threeparttable}
+\usepackage{hyperref}
+
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+% \usepackage[colorlinks,citecolor=blue]{hyperref}
+
+% \usepackage{draftwatermark}
+
+% Packages for drawing
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows,calc}
+\tikzstyle{startstop} = [rectangle, rounded corners, minimum width=3cm, minimum height=1cm,text centered, draw=black, fill=none]
+\tikzstyle{io} = [trapezium, trapezium left angle=70, trapezium right angle=110, minimum width=3cm, minimum height=1cm, text centered, draw=black, fill=blue!30]
+\tikzstyle{process} = [rectangle, minimum width=3.5cm, minimum height=1cm, text centered, draw=black, fill=orange!0]
+\tikzstyle{neuron} = [circle, minimum size=3cm, text centered, draw=black, fill=orange!0]
+\tikzstyle{decision} = [diamond, minimum width=3cm, minimum height=1cm, text centered, draw=black, fill=green!30]
+\tikzstyle{arrow} = [thick,->,>=stealth]
+
+\usepackage{pgfplots}
+\pgfplotsset{compat=newest}
+\pgfplotsset{plot coordinates/math parser=false}
+
+\usepackage{booktabs}
+\usepackage{multirow}
+
+% \usepackage[maxnames=3,firstinits=true,sorting=none,doi=false,url=true,isbn=false]{biblatex}
+\usepackage[maxnames=6,firstinits=true,doi=false,url=true,isbn=false]{biblatex}
+\addbibresource{dira.bib}
+
+
+\def \assumptionSGDfirst {1}
+\def \assumptionEWCfirst {1}
+\def \assumptionEWCsecond {2}
+
+\DeclareMathOperator*{\minimize}{min\text{ }}
+
+\pagenumbering{arabic}
+
+
+%-------------------------------------------------------------------------------
+
+\begin{document}
+
+% ***************************************************
+%  TITLE
+% ***************************************************
+\title{\textbf{DIRA}: \textbf{D}ynamic Domain \textbf{I}ncremental \textbf{R}egularised \textbf{A}daptation}
+
+\author{Abanoub Ghobrial, Xuan Zheng, Darryl Hond, Hamid Asgari, Kerstin Eder 
+\thanks{{\footnotesize
+Manuscript  
+received ...;
+revised ...;  
+accepted.... 
+Date of publication ...;
+date of current version ....
+
+% This research has in part been funded by the ROBOPILOT and CAPRI projects. Both projects are part-funded by the Centre for Connected and Autonomous Vehicles (CCAV), delivered in partnership with Innovate UK under grant numbers 103703 (CAPRI) and 103288 (ROBOPILOT). This research was also supported in part by the UKRI Trustworthy Autonomous Systems Node in Functionality under grant number EP/V026518/1. Also special thanks to S\'everin Lemaignan.
+
+% The Associate Editor for this paper was ....
+
+Abanoub Ghobrial (e-mail: abanoub.ghobrial@bristol.ac.uk), 
+Xuan Zheng (e-mail: dq18619@bristol.ac.uk), 
+and 
+Kerstin Eder (e-mail: kerstin.eder@bristol.ac.uk) 
+are with the Trustworthy Systems Lab, Department of Computer Science, University of Bristol, Merchant Ventures Building, Woodland Road, Bristol, BS8 1UB, United Kingdom. 
+
+Darryl Hond (e-mail: darryl.hond@uk.thalesgroup.com),
+and
+Hamid Asgari (e-mail: hamid.asgari@uk.thalesgroup.com) 
+are with Technology and Innovation Research,Thales, Reading, United Kingdom. 
+
+Digital Object Identifier ....
+}}}
+% \affil{Trustworthy Systems Laboratory, University of Bristol, Bristol, UK}
+% \affil{University of West of England, Bristol, UK}
+% \affil{Bristol Robotics Laboratory, Bristol, UK}
+%
+\markboth{IEEE TRANSACTIONS ON Neural Networks and Learning Systems VOL. ..., NO. ..., date...}{Ghobrial \MakeLowercase{\textit{et al.}}: DIRA: Dynamic Domain Incremental Regularised Adaptation}
+%
+\maketitle
+
+% ***************************************************
+%  Abstract
+% ***************************************************
+\begin{abstract}
+\noindent 
+\input{source/abstract.tex}
+\end{abstract}
+
+\begin{IEEEkeywords}
+Adaptation, Machine Learning, Regularisation,  Classifiers, Autonomous Systems
+\end{IEEEkeywords}
+\IEEEpeerreviewmaketitle 
+
+
+% ***************************************************
+%  Main Body
+% ***************************************************
+\input{source/body.tex}
+
+% ***************************************************
+%  Bib
+% ***************************************************
+\printbibliography
+
+% ***************************************************
+%  Bio
+% ***************************************************
+
+% \begin{IEEEbiography}[{\includegraphics[width=1in,height=1.25in,clip,keepaspectratio]{other/mugs/abanoub}}]{Abanoub Ghobrial}
+% received the MEng degree in mechanical engineering from the University of Bristol, Bristol,  U.K., in 2018. He is currently pursuing the Ph.D. degree in computer science at the University of Bristol and is a part-time Research Associate with the Trustworthy Systems Lab, Bristol,  U.K. From 2018 to 2020, he was a full-time Research Associate with the Trustworthy Systems Lab. His current research interests are techniques to allow self-managing of autonomous safety-critical systems via continual learning during operation; and the development of simulation-based verification techniques for autonomous systems.
+% \end{IEEEbiography}
+
+
+% \begin{IEEEbiography}[{\includegraphics[width=1in,height=1.25in,clip,keepaspectratio]{other/mugs/kie}}]{{Kerstin Eder}} 
+% is Professor of Computer Science and heads the Trustworthy Systems Laboratory at the University of Bristol, UK. She also leads the Verification and Validation for Safety in Robots research theme at the  Bristol Robotics Laboratory. She has gained extensive experience of verifying complex microelectronic designs while working with leading semiconductor design and Electronic Design Automation companies worldwide. Her research is focused on specification, verification and analysis techniques to verify or explore a system's behaviour in terms of functional correctness, safety, security, performance and energy efficiency. Prof.\ Eder's most recent contributions include agent-based testing, how to use assertions and theorem proving to verify control system designs, energy modeling and static resource analysis techniques to predict energy consumption of software. She holds a PhD in Computational Logic and an MSc in Artificial Intelligence from the University of Bristol, UK, as well as an MEng in Informatics (Dipl.\,Inf.) from the Technical University Dresden, Germany. In 2007 she was awarded an ``Excellence in Engineering'' prize from the Royal Academy of Engineering, UK.
+
+% \end{IEEEbiography}
+
+
+% ***************************************************
+%  Appendix
+% ***************************************************
+
+\end{document}
