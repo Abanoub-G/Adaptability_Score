@@ -13,7 +13,7 @@ from torch import nn, optim
 from torchvision import datasets, transforms
 
 from utils.common import set_random_seeds, set_cuda, logs
-from utils.dataloaders import pytorch_dataloader, cifar10_c_dataloader, samples_dataloader
+from utils.dataloaders import pytorch_dataloader, cifar_c_dataloader, imagenet_c_dataloader, samples_dataloader_iterative, augmented_samples_dataloader_iterative, augmented_samples_dataloader_iterative_imagenet
 
 from utils.model import model_selection
 
@@ -24,14 +24,18 @@ from methods.EWC import on_task_update, train_model_ewc
 import matplotlib.pyplot as plt
 from math import log
 
+import pickle
+
 # =====================================================
 # == Declarations
 # =====================================================
 SEED_NUMBER              = 0
 USE_CUDA                 = True
 
-DATASET_DIR              = '../datasets/CIFAR10/'
-DATASET_NAME             = "CIFAR10" # Options: "CIFAR10" "CIFAR100" "TinyImageNet"  "ImageNet"
+
+DATASET_DIR              = '../../NetZIP/datasets/ImageNet/imagenet-object-localization-challenge/ILSVRC/Data/CLS-LOC' #'../../NetZIP/datasets/TinyImageNet/' #'../datasets/CIFAR100/' 
+DATASET_NAME             = "ImageNet" # Options: "CIFAR10" "CIFAR100" "TinyImageNet"  "ImageNet"
+
 NUM_CLASSES              = 1000 # Number of classes in dataset
 
 MODEL_CHOICE             = "resnet" # Option:"resnet" "vgg"
@@ -51,20 +55,29 @@ NOISE_TYPES_ARRAY = ["brightness","contrast","defocus_blur",
 					"saturate", "shot_noise", "snow", "spatter", 
 					"speckle_noise", "zoom_blur"]
 
+# NOISE_TYPES_ARRAY = ["elastic_transform","fog","frost",
+# 					"gaussian_noise", "glass_blur", "impulse_noise",
+# 					"jpeg_compression", "motion_blur", "pixelate", 
+# 					"shot_noise", "snow", "zoom_blur"]
+# NOISE_TYPES_ARRAY = ["elastic_transform","fog","frost","gaussian_blur"]
+# NOISE_TYPES_ARRAY = ["gaussian_noise", "glass_blur", "impulse_noise"]
+# NOISE_TYPES_ARRAY = ["jpeg_compression", "motion_blur", "pixelate", "shot_noise", "snow", "zoom_blur"]
 # NOISE_TYPES_ARRAY = ["contrast","motion_blur","fog"]
+
+# NOISE_TYPES_ARRAY = ["impulse_noise"]
 
 NOISE_SEVERITY 	  = 5 # Options from 1 to 5
 
-MAX_SAMPLES_NUMBER = 450
+MAX_SAMPLES_NUMBER = 120 #220
+N_T_STEP = 25 #16
 
-
-def retrain(model, testloader, N_T_testloader_c, device, fisher_dict, optpar_dict, num_retrain_epochs, lambda_retrain, lr_retrain, zeta):
+def DIRA_retrain(model, testloader, N_T_trainloader_c, N_T_testloader_c, device, fisher_dict, optpar_dict, num_retrain_epochs, lambda_retrain, lr_retrain, zeta):
 	# Copy model for retraining
 	retrained_model = copy.deepcopy(model)
 	
 	# Retrain
 	retrained_model = train_model_ewc(model = retrained_model, 
-									train_loader = N_T_testloader_c, 
+									train_loader = N_T_trainloader_c, 
 									test_loader = N_T_testloader_c, 
 									device = device, 
 									fisher_dict = fisher_dict,
@@ -89,7 +102,12 @@ def retrain(model, testloader, N_T_testloader_c, device, fisher_dict, optpar_dic
 	print("A_k = ",A_k)
 
 	# Calculate CFAS
-	CFAS = A_k.cpu().numpy() * (zeta*A_0.cpu().numpy() +1)
+	# CFAS = A_k.cpu().numpy() * (zeta*A_0.cpu().numpy() +1)
+	CFAS = A_k.cpu().numpy() + 10*A_0.cpu().numpy()
+	# CFAS = A_k.cpu().numpy() + 2*A_0.cpu().numpy()
+	# CFAS = A_k.cpu().numpy() + 1.5*A_0.cpu().numpy()
+	# CFAS = A_k.cpu().numpy() * (5*A_0.cpu().numpy() +1)
+	# CFAS = A_k.cpu().numpy() * (10*A_0.cpu().numpy() +1)
 
 	return retrained_model, CFAS
 
@@ -108,8 +126,12 @@ def main():
 	model = model_selection(model_selection_flag=MODEL_SELECTION_FLAG, model_dir=MODEL_DIR, model_choice=MODEL_CHOICE, model_variant=MODEL_VARIANT, saved_model_filepath=MODEL_FILEPATH, num_classes=NUM_CLASSES, device=device)
 	print("Progress: Model has been setup.")
 
+	if DATASET_NAME == "ImageNet":
+		retraining_imagenet_flag = True
+	else:
+		retraining_imagenet_flag = False
 	# Setup original dataset
-	trainloader, testloader = pytorch_dataloader(dataset_name=DATASET_NAME, dataset_dir=DATASET_DIR, images_size=32, batch_size=64)
+	trainloader, testloader, small_test_loader = pytorch_dataloader(dataset_name=DATASET_NAME, dataset_dir=DATASET_DIR, images_size=32, batch_size=64, retraining_imagenet = retraining_imagenet_flag)
 	print("Progress: Dataset Loaded.")
 
 	# accuracies = []
@@ -122,8 +144,34 @@ def main():
 	optpar_dict = {}
 
 	optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9, weight_decay=1e-5)
-	fisher_dict, optpar_dict = on_task_update(0, trainloader, model, optimizer, fisher_dict, optpar_dict, device)
-	print("PROGRESS: Calculated Fisher matrix")
+	
+	save_dict = False
+	load_dict = True
+
+	if load_dict == True and (DATASET_NAME == "ImageNet" or DATASET_NAME == "TinyImageNet"):
+		with open("resnet18_"+DATASET_NAME+"_fisher.pkl", 'rb') as file:
+			fisher_dict = pickle.load(file)
+
+		with open("resnet18_"+DATASET_NAME+"_optpar.pkl", 'rb') as file:
+			optpar_dict = pickle.load(file)
+
+		print("PROGRESS: Calculated Fisher loaded")
+
+	else:
+		fisher_dict, optpar_dict = on_task_update(0, trainloader, model, optimizer, fisher_dict, optpar_dict, device)
+		print("PROGRESS: Calculated Fisher matrix")
+
+		if save_dict == True and (DATASET_NAME == "ImageNet" or DATASET_NAME == "TinyImageNet"):
+
+			with open("resnet18_"+DATASET_NAME+"_fisher.pkl", 'wb') as file:
+				pickle.dump(fisher_dict, file)
+
+			with open("resnet18_"+DATASET_NAME+"_optpar.pkl", 'wb') as file:
+				pickle.dump(optpar_dict, file)
+
+			print("PROGRESS: Saved Fisher matrix")
+
+
 
 	# ========================================
 	# == Load Noisy Data
@@ -136,7 +184,14 @@ def main():
 			testloader_c = testloader
 		else:
 			# load noisy dataset
-			testloader_c, noisy_images, noisy_labels    = cifar10_c_dataloader(NOISE_SEVERITY, noise_type)
+			if DATASET_NAME == "CIFAR10" or DATASET_NAME == "CIFAR100":
+				trainloader_c, testloader_c, noisy_images, noisy_labels    = cifar_c_dataloader(NOISE_SEVERITY, noise_type, DATASET_NAME)
+
+			elif DATASET_NAME == "ImageNet":
+				trainloader_c, testloader_c, train_set, test_set     = imagenet_c_dataloader(NOISE_SEVERITY, noise_type, tiny_imagenet=False)
+
+			elif DATASET_NAME == "TinyImageNet":
+				trainloader_c, testloader_c,  train_set, test_set    = imagenet_c_dataloader(NOISE_SEVERITY, noise_type, tiny_imagenet=True)
 			# print("shape of noisy images = ", np.shape(noisy_images))
 			# print("shape of noisy labels = ", np.shape(noisy_labels))
 		
@@ -150,12 +205,18 @@ def main():
 		# == Select random N_T number of datapoints from noisy data for retraining
 		# ========================================
 		N_T_vs_A_T = []
+		samples_indices_array = []
 		# Extract N_T random samples
-		for N_T in range(2,MAX_SAMPLES_NUMBER,50):#16):
+		for N_T in range(2,MAX_SAMPLES_NUMBER,N_T_STEP):
 			print("++++++++++++++")
 			print("N_T = ", N_T)
 			print("Noise Type = ", noise_type) 
-			N_T_testloader_c = samples_dataloader(N_T, noisy_images, noisy_labels)
+			if DATASET_NAME == "CIFAR10" or DATASET_NAME == "CIFAR100":
+				N_T_trainloader_c, N_T_testloader_c, samples_indices_array = augmented_samples_dataloader_iterative(N_T, noisy_images, noisy_labels, samples_indices_array, N_T_STEP)
+			
+			elif DATASET_NAME == "ImageNet" or DATASET_NAME == "TinyImageNet":
+				N_T_trainloader_c, N_T_testloader_c, samples_indices_array = augmented_samples_dataloader_iterative_imagenet(N_T, train_set, test_set, samples_indices_array, N_T_STEP)
+
 
 
 			# ========================================	
@@ -170,15 +231,14 @@ def main():
 			temp_list_lambda           = []
 			temp_list_CFAS             = []
 
-			SGC_flag  = True
+			SGC_flag  = False
 			CFAS_flag = False
-			EWC_flag  = False
-
+			EWC_flag  = True
 			if SGC_flag == True:
-				lr_retrain = 1e-5
+				lr_retrain = 1e-2
 				lambda_retrain = 0
 
-				retrained_model, CFAS = retrain(model, testloader, N_T_testloader_c, device, fisher_dict, optpar_dict, num_retrain_epochs, lambda_retrain, lr_retrain, zeta)
+				retrained_model, CFAS = DIRA_retrain(model, small_test_loader, N_T_trainloader_c, N_T_testloader_c, device, fisher_dict, optpar_dict, num_retrain_epochs, lambda_retrain, lr_retrain, zeta)
 				
 				# Append Data
 				temp_list_retrained_models.append(retrained_model)
@@ -187,10 +247,10 @@ def main():
 				temp_list_CFAS.append(CFAS) 
 
 			if CFAS_flag == True:
-				for lr_retrain in [1e-6,1e-5,1e-3,1e-2]:
+				for lr_retrain in [1e-5,1e-4,1e-3,1e-2]:
 					lambda_retrain = 0
 
-					retrained_model, CFAS = retrain(model, testloader, N_T_testloader_c, device, fisher_dict, optpar_dict, num_retrain_epochs, lambda_retrain, lr_retrain, zeta)
+					retrained_model, CFAS = DIRA_retrain(model, small_test_loader, N_T_trainloader_c, N_T_testloader_c, device, fisher_dict, optpar_dict, num_retrain_epochs, lambda_retrain, lr_retrain, zeta)
 					
 					# Append Data
 					temp_list_retrained_models.append(retrained_model)
@@ -202,7 +262,7 @@ def main():
 				for lr_retrain in [1e-5,1e-4,1e-3,1e-2]:
 					for lambda_retrain in [0.25,0.5,0.75,1,2]:
 
-						retrained_model, CFAS = retrain(model, testloader, N_T_testloader_c, device, fisher_dict, optpar_dict, num_retrain_epochs, lambda_retrain, lr_retrain, zeta)
+						retrained_model, CFAS = DIRA_retrain(model, small_test_loader, N_T_trainloader_c, N_T_testloader_c, device, fisher_dict, optpar_dict, num_retrain_epochs, lambda_retrain, lr_retrain, zeta)
 						
 						# Append Data
 						temp_list_retrained_models.append(retrained_model)
@@ -235,7 +295,7 @@ def main():
 		# Log
 		logs_dic[noise_type] = N_T_vs_A_T
 
-	results_log.write_file("exp22.txt")
+	results_log.write_file("exp80_temp.txt")
 
 
 
