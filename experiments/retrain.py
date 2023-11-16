@@ -33,13 +33,13 @@ SEED_NUMBER              = 0
 USE_CUDA                 = True
 
 
-DATASET_DIR              = '../datasets/CIFAR10/' #'../../NetZIP/datasets/ImageNet/imagenet-object-localization-challenge/ILSVRC/Data/CLS-LOC' #'../../NetZIP/datasets/TinyImageNet/' #'../datasets/CIFAR100/' 
-DATASET_NAME             = "CIFAR10" # Options: "CIFAR10" "CIFAR100" "TinyImageNet"  "ImageNet"
+DATASET_DIR              = '../../NetZIP/datasets/ImageNet/imagenet-object-localization-challenge/ILSVRC/Data/CLS-LOC' #'../../NetZIP/datasets/TinyImageNet/' #'../datasets/CIFAR100/' 
+DATASET_NAME             = "ImageNet" # Options: "CIFAR10" "CIFAR100" "TinyImageNet"  "ImageNet"
 
-NUM_CLASSES              = 10 # Number of classes in dataset
+NUM_CLASSES              = 1000 # Number of classes in dataset
 
 MODEL_CHOICE             = "resnet" # Option:"resnet" "vgg"
-MODEL_VARIANT            = "resnet26" # Common Options: "resnet18" "vgg11" For more options explore files in models to find the different options.
+MODEL_VARIANT            = "resnet18" # Common Options: "resnet18" "vgg11" For more options explore files in models to find the different options.
 
 MODEL_DIR                = "../models/" + MODEL_CHOICE
 MODEL_SELECTION_FLAG     = 2 # create an untrained model = 0, start from a pytorch trained model = 1, start from a previously saved local model = 2
@@ -108,9 +108,15 @@ def DIRA_retrain(model, testloader, N_T_trainloader_c, N_T_testloader_c, device,
 	_, A_k    = top1Accuracy(model=retrained_model, test_loader=N_T_testloader_c, device=device, criterion=None)
 	print("A_k = ",A_k)
 
+	if isinstance(A_0, torch.Tensor):
+		A_0 = A_0.cpu().numpy()
+
+	if isinstance(A_k, torch.Tensor):
+		A_k = A_k.cpu().numpy()
+
 	# Calculate CFAS
 	# CFAS = A_k.cpu().numpy() * (zeta*A_0.cpu().numpy() +1)
-	CFAS = A_k.cpu().numpy() + zeta*A_0.cpu().numpy()
+	CFAS = A_k + zeta*A_0
 	# CFAS = A_k.cpu().numpy() + 2*A_0.cpu().numpy()
 	# CFAS = A_k.cpu().numpy() + 1.5*A_0.cpu().numpy()
 	# CFAS = A_k.cpu().numpy() * (5*A_0.cpu().numpy() +1)
@@ -311,7 +317,7 @@ def main():
 		# Log
 		logs_dic[noise_type] = N_T_vs_A_T
 
-	results_log.write_file("exp100.txt")
+	results_log.write_file("exp102.txt")
 
 
 

@@ -356,10 +356,10 @@ def augmented_samples_dataloader_iterative(N_T, noisy_images, noisy_labels, samp
     selected_noisy_labels = np.take(noisy_labels,samples_indices_array, axis=0)
 
     N_T_train_set_c = CustomTensorDataset(tensors=(selected_noisy_images, selected_noisy_labels), transform=custom_train_transform)
-    N_T_trainloader_c = torch.utils.data.DataLoader(N_T_train_set_c, batch_size=64, shuffle=False, drop_last=True)
+    N_T_trainloader_c = torch.utils.data.DataLoader(N_T_train_set_c, batch_size=64, shuffle=False)
 
     N_T_test_set_c = CustomTensorDataset(tensors=(selected_noisy_images, selected_noisy_labels), transform=custom_test_transform)
-    N_T_testloader_c = torch.utils.data.DataLoader(N_T_test_set_c, batch_size=64, shuffle=False, drop_last=True)
+    N_T_testloader_c = torch.utils.data.DataLoader(N_T_test_set_c, batch_size=64, shuffle=False)
 
 
     # Display some images to visualise transforms
@@ -386,6 +386,10 @@ def augmented_samples_dataloader_iterative_imagenet(N_T, train_set, test_set, sa
         # Select a random number from the max number of images
         i = random.randint(0,max_num_noisy_samples)
         samples_indices_array.append(i)
+    # print("N_T = ", N_T)
+    # print("number_of_samples_to_add = ", number_of_samples_to_add)
+    # print("number_of_samples_used = ",len(samples_indices_array)) 
+    # input("press enter to continue")
 
     selected_train_subset = torch.utils.data.Subset(train_set, samples_indices_array)
     selected_test_subset = torch.utils.data.Subset(test_set, samples_indices_array)
@@ -393,8 +397,8 @@ def augmented_samples_dataloader_iterative_imagenet(N_T, train_set, test_set, sa
     # selected_noisy_images = np.take(noisy_images,samples_indices_array, axis=0)
     # selected_noisy_labels = np.take(noisy_labels,samples_indices_array, axis=0)
 
-    N_T_trainloader_c = torch.utils.data.DataLoader(selected_train_subset, batch_size=64, shuffle=False, drop_last=True)
-    N_T_testloader_c = torch.utils.data.DataLoader(selected_test_subset, batch_size=64, shuffle=False, drop_last=True)
+    N_T_trainloader_c = torch.utils.data.DataLoader(selected_train_subset, batch_size=64, shuffle=False)
+    N_T_testloader_c = torch.utils.data.DataLoader(selected_test_subset, batch_size=64, shuffle=False)
 
 
     # Display some images to visualise transforms
