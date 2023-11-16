@@ -13,7 +13,7 @@ from torch import nn, optim
 from torchvision import datasets, transforms
 
 from utils.common import set_random_seeds, set_cuda, logs
-from utils.dataloaders import pytorch_dataloader, cifar_c_dataloader, imagenet_c_dataloader, samples_dataloader_iterative, augmented_samples_dataloader_iterative, augmented_samples_dataloader_iterative_imagenet
+from utils.dataloaders import pytorch_dataloader, cifar_c_dataloader, imagenet_c_dataloader, augmented_samples_dataloader_iterative, augmented_samples_dataloader_iterative_imagenet
 
 from utils.model import model_selection
 
@@ -33,28 +33,34 @@ SEED_NUMBER              = 0
 USE_CUDA                 = True
 
 
-DATASET_DIR              = '../../NetZIP/datasets/ImageNet/imagenet-object-localization-challenge/ILSVRC/Data/CLS-LOC' #'../../NetZIP/datasets/TinyImageNet/' #'../datasets/CIFAR100/' 
-DATASET_NAME             = "ImageNet" # Options: "CIFAR10" "CIFAR100" "TinyImageNet"  "ImageNet"
+DATASET_DIR              = '../datasets/CIFAR10/' #'../../NetZIP/datasets/ImageNet/imagenet-object-localization-challenge/ILSVRC/Data/CLS-LOC' #'../../NetZIP/datasets/TinyImageNet/' #'../datasets/CIFAR100/' 
+DATASET_NAME             = "CIFAR10" # Options: "CIFAR10" "CIFAR100" "TinyImageNet"  "ImageNet"
 
-NUM_CLASSES              = 1000 # Number of classes in dataset
+NUM_CLASSES              = 10 # Number of classes in dataset
 
 MODEL_CHOICE             = "resnet" # Option:"resnet" "vgg"
-MODEL_VARIANT            = "resnet18" # Common Options: "resnet18" "vgg11" For more options explore files in models to find the different options.
+MODEL_VARIANT            = "resnet26" # Common Options: "resnet18" "vgg11" For more options explore files in models to find the different options.
 
 MODEL_DIR                = "../models/" + MODEL_CHOICE
 MODEL_SELECTION_FLAG     = 2 # create an untrained model = 0, start from a pytorch trained model = 1, start from a previously saved local model = 2
 
-MODEL_FILENAME     = MODEL_VARIANT +"_"+DATASET_NAME+".pt"
+MODEL_FILENAME     = MODEL_VARIANT +"_"+DATASET_NAME+".pt" # Uncomment this line, to use checkpoint from domain must go on. 
+# MODEL_FILENAME     = MODEL_VARIANT +"_"+DATASET_NAME+"_DUA.pth" # Uncomment this line, to use checkpoint from domain must go on. 
 MODEL_FILEPATH     = os.path.join(MODEL_DIR, MODEL_FILENAME)
 
 
+# NOISE_TYPES_ARRAY = ["brightness","contrast","defocus_blur",
+# 					"elastic_transform","fog","frost","gaussian_blur",
+# 					"gaussian_noise", "glass_blur", "impulse_noise",
+# 					"jpeg_compression", "motion_blur", "pixelate", 
+# 					"saturate", "shot_noise", "snow", "spatter", 
+# 					"speckle_noise", "zoom_blur"]
+
 NOISE_TYPES_ARRAY = ["brightness","contrast","defocus_blur",
-					"elastic_transform","fog","frost","gaussian_blur",
+					"elastic_transform","fog","frost",
 					"gaussian_noise", "glass_blur", "impulse_noise",
 					"jpeg_compression", "motion_blur", "pixelate", 
-					"saturate", "shot_noise", "snow", "spatter", 
-					"speckle_noise", "zoom_blur"]
-
+					"shot_noise", "snow", "zoom_blur"]
 # NOISE_TYPES_ARRAY = ["elastic_transform","fog","frost",
 # 					"gaussian_noise", "glass_blur", "impulse_noise",
 # 					"jpeg_compression", "motion_blur", "pixelate", 
@@ -69,7 +75,8 @@ NOISE_TYPES_ARRAY = ["brightness","contrast","defocus_blur",
 NOISE_SEVERITY 	  = 5 # Options from 1 to 5
 
 MAX_SAMPLES_NUMBER = 120 #220
-N_T_STEP = 25 #16
+N_T_Initial        = 1
+N_T_STEP = 100#25 #16
 
 def DIRA_retrain(model, testloader, N_T_trainloader_c, N_T_testloader_c, device, fisher_dict, optpar_dict, num_retrain_epochs, lambda_retrain, lr_retrain, zeta):
 	# Copy model for retraining
@@ -103,7 +110,7 @@ def DIRA_retrain(model, testloader, N_T_trainloader_c, N_T_testloader_c, device,
 
 	# Calculate CFAS
 	# CFAS = A_k.cpu().numpy() * (zeta*A_0.cpu().numpy() +1)
-	CFAS = A_k.cpu().numpy() + 10*A_0.cpu().numpy()
+	CFAS = A_k.cpu().numpy() + zeta*A_0.cpu().numpy()
 	# CFAS = A_k.cpu().numpy() + 2*A_0.cpu().numpy()
 	# CFAS = A_k.cpu().numpy() + 1.5*A_0.cpu().numpy()
 	# CFAS = A_k.cpu().numpy() * (5*A_0.cpu().numpy() +1)
@@ -200,6 +207,13 @@ def main():
 		original_model_eval_accuracy       = eval_accuracy.cpu().numpy()
 		print(noise_type +" dataset = ",original_model_eval_accuracy)
 		
+		# ========================================	
+		# == Append Details of model performance before retraining
+		# ========================================
+		results_log.append(noise_type, 0, original_model_eval_accuracy,
+								0, 
+								0, 
+								0)
 
 		# ========================================	
 		# == Select random N_T number of datapoints from noisy data for retraining
@@ -207,15 +221,17 @@ def main():
 		N_T_vs_A_T = []
 		samples_indices_array = []
 		# Extract N_T random samples
-		for N_T in range(2,MAX_SAMPLES_NUMBER,N_T_STEP):
+		for N_T in range(0,MAX_SAMPLES_NUMBER,N_T_STEP):
+			if N_T == 0:
+				N_T = N_T_Initial
 			print("++++++++++++++")
 			print("N_T = ", N_T)
 			print("Noise Type = ", noise_type) 
 			if DATASET_NAME == "CIFAR10" or DATASET_NAME == "CIFAR100":
-				N_T_trainloader_c, N_T_testloader_c, samples_indices_array = augmented_samples_dataloader_iterative(N_T, noisy_images, noisy_labels, samples_indices_array, N_T_STEP)
+				N_T_trainloader_c, N_T_testloader_c, samples_indices_array = augmented_samples_dataloader_iterative(N_T, noisy_images, noisy_labels, samples_indices_array)
 			
 			elif DATASET_NAME == "ImageNet" or DATASET_NAME == "TinyImageNet":
-				N_T_trainloader_c, N_T_testloader_c, samples_indices_array = augmented_samples_dataloader_iterative_imagenet(N_T, train_set, test_set, samples_indices_array, N_T_STEP)
+				N_T_trainloader_c, N_T_testloader_c, samples_indices_array = augmented_samples_dataloader_iterative_imagenet(N_T, train_set, test_set, samples_indices_array)
 
 
 
@@ -224,7 +240,7 @@ def main():
 			# ========================================
 			num_retrain_epochs = 10
 
-			zeta = 1
+			zeta = 10
 
 			temp_list_retrained_models = []
 			temp_list_lr               = []
@@ -295,7 +311,7 @@ def main():
 		# Log
 		logs_dic[noise_type] = N_T_vs_A_T
 
-	results_log.write_file("exp80_temp.txt")
+	results_log.write_file("exp100.txt")
 
 
 

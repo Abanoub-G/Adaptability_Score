@@ -322,40 +322,44 @@ def samples_dataloader(N_T, noisy_images, noisy_labels):
     return N_T_testloader_c
 
 
-def samples_dataloader_iterative(N_T, noisy_images, noisy_labels, samples_indices_array, N_T_step):
-    # Get length of images
-    max_num_noisy_samples = len(noisy_labels)-1
+# def samples_dataloader_iterative(N_T, noisy_images, noisy_labels, samples_indices_array, N_T_step):
+#     # Get length of images
+#     max_num_noisy_samples = len(noisy_labels)-1
 
-    for _ in range(N_T_step): 
-        # Select a random number from the max number of images
-        i = random.randint(0,max_num_noisy_samples)
-        samples_indices_array.append(i)
+#     for _ in range(N_T_step): 
+#         # Select a random number from the max number of images
+#         i = random.randint(0,max_num_noisy_samples)
+#         samples_indices_array.append(i)
     
-    selected_noisy_images = np.take(noisy_images,samples_indices_array, axis=0)
-    selected_noisy_labels = np.take(noisy_labels,samples_indices_array, axis=0)
+#     selected_noisy_images = np.take(noisy_images,samples_indices_array, axis=0)
+#     selected_noisy_labels = np.take(noisy_labels,samples_indices_array, axis=0)
         
-    N_T_test_set_c = torch.utils.data.TensorDataset(selected_noisy_images,selected_noisy_labels)
-    N_T_testloader_c = torch.utils.data.DataLoader(N_T_test_set_c, batch_size=64, shuffle=True)
+#     N_T_test_set_c = torch.utils.data.TensorDataset(selected_noisy_images,selected_noisy_labels)
+#     N_T_testloader_c = torch.utils.data.DataLoader(N_T_test_set_c, batch_size=64, shuffle=True)
 
-    return N_T_testloader_c, samples_indices_array
+#     return N_T_testloader_c, samples_indices_array
 
-def augmented_samples_dataloader_iterative(N_T, noisy_images, noisy_labels, samples_indices_array, N_T_step):
+def augmented_samples_dataloader_iterative(N_T, noisy_images, noisy_labels, samples_indices_array):
     # Get length of images
     max_num_noisy_samples = len(noisy_labels)-1
 
-    for _ in range(N_T_step): 
+    number_of_samples_to_add =  N_T - len(samples_indices_array)
+
+    for _ in range(number_of_samples_to_add): 
         # Select a random number from the max number of images
         i = random.randint(0,max_num_noisy_samples)
         samples_indices_array.append(i)
-    
+    # print("Number of samples being used in retraining = ",len(samples_indices_array))
+    # input("press enter to continue")
+
     selected_noisy_images = np.take(noisy_images,samples_indices_array, axis=0)
     selected_noisy_labels = np.take(noisy_labels,samples_indices_array, axis=0)
 
     N_T_train_set_c = CustomTensorDataset(tensors=(selected_noisy_images, selected_noisy_labels), transform=custom_train_transform)
-    N_T_trainloader_c = torch.utils.data.DataLoader(N_T_train_set_c, batch_size=64, shuffle=False)
+    N_T_trainloader_c = torch.utils.data.DataLoader(N_T_train_set_c, batch_size=64, shuffle=False, drop_last=True)
 
     N_T_test_set_c = CustomTensorDataset(tensors=(selected_noisy_images, selected_noisy_labels), transform=custom_test_transform)
-    N_T_testloader_c = torch.utils.data.DataLoader(N_T_test_set_c, batch_size=64, shuffle=False)
+    N_T_testloader_c = torch.utils.data.DataLoader(N_T_test_set_c, batch_size=64, shuffle=False, drop_last=True)
 
 
     # Display some images to visualise transforms
@@ -372,11 +376,13 @@ def augmented_samples_dataloader_iterative(N_T, noisy_images, noisy_labels, samp
 
     return N_T_trainloader_c, N_T_testloader_c, samples_indices_array
 
-def augmented_samples_dataloader_iterative_imagenet(N_T, train_set, test_set, samples_indices_array, N_T_step):
+def augmented_samples_dataloader_iterative_imagenet(N_T, train_set, test_set, samples_indices_array):
     # Get length of images
     max_num_noisy_samples = len(test_set)-1
 
-    for _ in range(N_T_step): 
+    number_of_samples_to_add =  N_T - len(samples_indices_array)
+
+    for _ in range(number_of_samples_to_add): 
         # Select a random number from the max number of images
         i = random.randint(0,max_num_noisy_samples)
         samples_indices_array.append(i)
@@ -387,8 +393,8 @@ def augmented_samples_dataloader_iterative_imagenet(N_T, train_set, test_set, sa
     # selected_noisy_images = np.take(noisy_images,samples_indices_array, axis=0)
     # selected_noisy_labels = np.take(noisy_labels,samples_indices_array, axis=0)
 
-    N_T_trainloader_c = torch.utils.data.DataLoader(selected_train_subset, batch_size=64, shuffle=False)
-    N_T_testloader_c = torch.utils.data.DataLoader(selected_test_subset, batch_size=64, shuffle=False)
+    N_T_trainloader_c = torch.utils.data.DataLoader(selected_train_subset, batch_size=64, shuffle=False, drop_last=True)
+    N_T_testloader_c = torch.utils.data.DataLoader(selected_test_subset, batch_size=64, shuffle=False, drop_last=True)
 
 
     # Display some images to visualise transforms
@@ -404,3 +410,68 @@ def augmented_samples_dataloader_iterative_imagenet(N_T, train_set, test_set, sa
             break
 
     return N_T_trainloader_c, N_T_testloader_c, samples_indices_array
+# def augmented_samples_dataloader_iterative(N_T, noisy_images, noisy_labels, samples_indices_array, N_T_step):
+#     # Get length of images
+#     max_num_noisy_samples = len(noisy_labels)-1
+
+#     for _ in range(N_T_step): 
+#         # Select a random number from the max number of images
+#         i = random.randint(0,max_num_noisy_samples)
+#         samples_indices_array.append(i)
+    
+#     selected_noisy_images = np.take(noisy_images,samples_indices_array, axis=0)
+#     selected_noisy_labels = np.take(noisy_labels,samples_indices_array, axis=0)
+
+#     N_T_train_set_c = CustomTensorDataset(tensors=(selected_noisy_images, selected_noisy_labels), transform=custom_train_transform)
+#     N_T_trainloader_c = torch.utils.data.DataLoader(N_T_train_set_c, batch_size=64, shuffle=False)
+
+#     N_T_test_set_c = CustomTensorDataset(tensors=(selected_noisy_images, selected_noisy_labels), transform=custom_test_transform)
+#     N_T_testloader_c = torch.utils.data.DataLoader(N_T_test_set_c, batch_size=64, shuffle=False)
+
+
+#     # Display some images to visualise transforms
+#     show_pics_samples = True
+#     if show_pics_samples == True:
+#         for i, data in enumerate(N_T_trainloader_c):
+#             x, y = data  
+#             imshow(torchvision.utils.make_grid(x, 4), "train_transforms.png" , title='train_Transforms')
+#             break
+#         for i, data in enumerate(N_T_testloader_c):
+#             x, y = data  
+#             imshow(torchvision.utils.make_grid(x, 4), "test_transforms.png", title='test_Transforms')
+#             break
+
+#     return N_T_trainloader_c, N_T_testloader_c, samples_indices_array
+
+# def augmented_samples_dataloader_iterative_imagenet(N_T, train_set, test_set, samples_indices_array, N_T_step):
+#     # Get length of images
+#     max_num_noisy_samples = len(test_set)-1
+
+#     for _ in range(N_T_step): 
+#         # Select a random number from the max number of images
+#         i = random.randint(0,max_num_noisy_samples)
+#         samples_indices_array.append(i)
+
+#     selected_train_subset = torch.utils.data.Subset(train_set, samples_indices_array)
+#     selected_test_subset = torch.utils.data.Subset(test_set, samples_indices_array)
+    
+#     # selected_noisy_images = np.take(noisy_images,samples_indices_array, axis=0)
+#     # selected_noisy_labels = np.take(noisy_labels,samples_indices_array, axis=0)
+
+#     N_T_trainloader_c = torch.utils.data.DataLoader(selected_train_subset, batch_size=64, shuffle=False)
+#     N_T_testloader_c = torch.utils.data.DataLoader(selected_test_subset, batch_size=64, shuffle=False)
+
+
+#     # Display some images to visualise transforms
+#     show_pics_samples = True
+#     if show_pics_samples == True:
+#         for i, data in enumerate(N_T_trainloader_c):
+#             x, y = data  
+#             imshow(torchvision.utils.make_grid(x, 4), "train_transforms.png" , title='train_Transforms')
+#             break
+#         for i, data in enumerate(N_T_testloader_c):
+#             x, y = data  
+#             imshow(torchvision.utils.make_grid(x, 4), "test_transforms.png", title='test_Transforms')
+#             break
+
+#     return N_T_trainloader_c, N_T_testloader_c, samples_indices_array

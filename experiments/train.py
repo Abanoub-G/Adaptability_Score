@@ -25,12 +25,12 @@ from metrics.accuracy.topAccuracy import top1Accuracy
 SEED_NUMBER              = 0
 USE_CUDA                 = True
 
-DATASET_DIR              = '../../NetZIP/datasets/TinyImageNet/'#'../datasets/CIFAR100/'
-DATASET_NAME             = "TinyImageNet" # Options: "CIFAR10" "CIFAR100" "TinyImageNet"  "ImageNet"
-NUM_CLASSES              = 1000 # Number of classes in dataset
+DATASET_DIR              = '../datasets/CIFAR10/'#'../../NetZIP/datasets/TinyImageNet/'#'../datasets/CIFAR100/'
+DATASET_NAME             = "CIFAR10" # Options: "CIFAR10" "CIFAR100" "TinyImageNet"  "ImageNet"
+NUM_CLASSES              = 10 # Number of classes in dataset
 
 MODEL_CHOICE             = "resnet" # Option:"resnet" 
-MODEL_VARIANT            = "resnet18" # Common Options: "resnet18" "resnet26" For more options explore files in models to find the different options.
+MODEL_VARIANT            = "resnet26" # Common Options: "resnet18" "resnet26" For more options explore files in models to find the different options.
 
 MODEL_DIR                = "../models/" + MODEL_CHOICE
 MODEL_SELECTION_FLAG     = 2 # create an untrained model = 0, start from a pytorch trained model = 1, start from a previously saved local model = 2
@@ -41,7 +41,7 @@ SAVED_MODEL_FILEPATH     = os.path.join(MODEL_DIR, SAVED_MODEL_FILENAME)
 TRAINED_MODEL_FILENAME   = MODEL_VARIANT +"_"+DATASET_NAME+".pt"
 
 NUM_EPOCHS               = 3
-LEARNING_RATE            = 1e-2
+LEARNING_RATE            = 1e-5
 
 
 # Fix seeds to allow for repeatable results 
@@ -59,7 +59,7 @@ def main():
     device = set_cuda(USE_CUDA)
 
     # Setup dataset
-    trainloader, testloader = pytorch_dataloader(dataset_name=DATASET_NAME, dataset_dir=DATASET_DIR, images_size=32, batch_size=64)
+    trainloader, testloader, _ = pytorch_dataloader(dataset_name=DATASET_NAME, dataset_dir=DATASET_DIR, images_size=32, batch_size=64)
     print("Progress: Dataset Loaded.")
     # images_size = 32
     # transform = transforms.Compose([

@@ -35,18 +35,21 @@ def model_selection(model_selection_flag=0, model_dir="", model_choice="", model
     elif model_selection_flag == 1 and model_variant=="resnet26":
         # Load a pretrained model from Pytorch.
         print("CUSTOM LOAD")
-        model = create_model(model_dir, model_choice, model_variant, num_classes)
+        model = create_model(model_dir, model_choice, model_variant, 1000)
         state_dict = torch.hub.load_state_dict_from_url("https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/resnet26-9aa10e23.pth", progress=True)
         model.load_state_dict(state_dict)
+        model.fc = nn.Linear(model.fc.in_features, num_classes)
 
     elif model_selection_flag == 1:
         # Load a pretrained model from Pytorch.
         model = torch.hub.load('pytorch/vision:v0.10.0', model_variant, pretrained=True)
+        model.fc = nn.Linear(model.fc.in_features, num_classes)
     
     elif model_selection_flag == 2:
         # Load a local pretrained model.
         model = create_model(model_dir, model_choice, model_variant, num_classes)
         model = load_model(model=model, model_filepath=saved_model_filepath, device=device)
+        
 
     return model
 
