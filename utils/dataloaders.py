@@ -247,8 +247,8 @@ def pytorch_dataloader(dataset_name="", dataset_dir="", images_size=32, batch_si
         small_test_set = test_set
 
     elif dataset_name =="CIFAR100": 
-        train_set = torchvision.datasets.CIFAR10(root=dataset_dir, train=True, download=True, transform=train_transform) 
-        test_set = torchvision.datasets.CIFAR10(root=dataset_dir, train=False, download=True, transform=test_transform)
+        train_set = torchvision.datasets.CIFAR100(root=dataset_dir, train=True, download=True, transform=train_transform) 
+        test_set = torchvision.datasets.CIFAR100(root=dataset_dir, train=False, download=True, transform=test_transform)
         small_test_set = test_set
 
     elif dataset_name == "TinyImageNet":
