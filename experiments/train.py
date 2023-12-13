@@ -27,7 +27,7 @@ USE_CUDA                 = True
 
 DATASET_DIR              = '../datasets/CIFAR10/'#'../../NetZIP/datasets/TinyImageNet/'#'../datasets/CIFAR100/'
 DATASET_NAME             = "CIFAR10" # Options: "CIFAR10" "CIFAR100" "TinyImageNet"  "ImageNet"
-NUM_CLASSES              = 10 # Number of classes in dataset
+NUM_CLASSES              = 1000 # Number of classes in dataset
 
 MODEL_CHOICE             = "resnet" # Option:"resnet" 
 MODEL_VARIANT            = "resnet26" # Common Options: "resnet18" "resnet26" For more options explore files in models to find the different options.
@@ -41,7 +41,7 @@ SAVED_MODEL_FILEPATH     = os.path.join(MODEL_DIR, SAVED_MODEL_FILENAME)
 TRAINED_MODEL_FILENAME   = MODEL_VARIANT +"_"+DATASET_NAME+".pt"
 
 NUM_EPOCHS               = 3
-LEARNING_RATE            = 1e-5
+LEARNING_RATE            = 1e-3
 
 
 # Fix seeds to allow for repeatable results 

@@ -10,9 +10,9 @@ import pandas as pd
 # =======================================
 # Samples VS Accuracy
 # =======================================
-experiment_id_array = [66, 64, 45, 41]
+experiment_id_array = [104, 105, 108]#[66, 64, 45, 41]
 
-Source_acuracy = 0.637#0.504
+# Source_acuracy = 0#0.637#0.504
 
 for experiment_id in experiment_id_array:
 
@@ -32,22 +32,27 @@ for experiment_id in experiment_id_array:
 			first_run_flag = False
 		else:
 			A_T_array += df_extracted["A_T"].values
-
+			
 	A_T_array = A_T_array/len(NOISE_TYPES)
-	A_T_array = np.insert(A_T_array,0, Source_acuracy)
-	N_T_array = np.insert(N_T_array,0, 0)
+	Source_acuracy = A_T_array[0]
 
-	if experiment_id == 66:
+	# print(Source_acuracy)
+	# input("press enter to proceed")
+
+	# A_T_array = np.insert(A_T_array,0, Source_acuracy)
+	# N_T_array = np.insert(N_T_array,0, 0)
+
+	if experiment_id == 108 or experiment_id == 100 or experiment_id == 103:
 		label_name = "DIRA"
 		color_name = "blue"
 		linestyle  = "-"
 	
-	elif experiment_id == 41:
+	elif experiment_id == 41 or experiment_id == 105:
 		label_name = "SGD ($\eta$ = 1e-5"
 		color_name = "orange"
 		linestyle  = "-"
 
-	elif experiment_id == 45:
+	elif experiment_id == 45 or experiment_id == 104:
 		label_name = "SGD ($\eta$ = 1e-3"
 		color_name = "orange"
 		linestyle  = "-."
@@ -66,7 +71,8 @@ plt.plot([0,202], [Source_acuracy*100, Source_acuracy*100], label="Source", line
 
 plt.legend()
 plt.ylim(0,100)
-plt.xlim(0,200)
+# plt.xlim(0,200)
+plt.xlim(0,100)
 plt.xlabel("Number of Samples for Adaptation")
 plt.ylabel("Top-1 Classification Accuracy (%)")
 plt.savefig(results_folder+"/CIFAR10C_Resnet18_N_TvsA_T.pdf")
@@ -79,10 +85,10 @@ plt.savefig(results_folder+"/CIFAR10C_Resnet18_N_TvsA_T.pdf")
 # experiment_id_array = [66, 64]
 
 
-Source_acuracy = [0.270, 0.593, 0.510, 0.625] # strictly in the order of "contrast","defocus_blur", "fog", "zoom_blur"
+# Source_acuracy = [0.270, 0.593, 0.510, 0.625] # strictly in the order of "contrast","defocus_blur", "fog", "zoom_blur"
 Baseline_accuracy = 0.855
 
-experiment_id = 66
+experiment_id = 108
 
 file_name = "Results_logs/exp"+str(experiment_id)+".txt"
 results_folder = "Results_plots"
@@ -113,9 +119,9 @@ for noise_type in ["contrast","defocus_blur", "fog", "zoom_blur"]:
 		# A_T_array = A_T_array[:5] # np.insert(A_T_array[:5],0, Source_acuracy)
 		# N_T_array = N_T_array[:5] - 2# np.insert(N_T_array[:5],0, 0) -2
 
-		A_T_array = np.insert(A_T_array[:5], 0, Source_acuracy[counter])
-		N_T_array = np.insert(N_T_array[:5],0, 0) 
-		N_T_array[-1] = 100
+		# A_T_array = np.insert(A_T_array[:5], 0, Source_acuracy[counter])
+		# N_T_array = np.insert(N_T_array[:5],0, 0) 
+		# N_T_array[-1] = 100
 	
 	A_T_array = A_T_array *100
 

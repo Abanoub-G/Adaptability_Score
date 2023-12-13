@@ -33,13 +33,13 @@ SEED_NUMBER              = 0
 USE_CUDA                 = True
 
 
-DATASET_DIR              = '../../NetZIP/datasets/ImageNet/imagenet-object-localization-challenge/ILSVRC/Data/CLS-LOC' #'../../NetZIP/datasets/TinyImageNet/' #'../datasets/CIFAR100/' 
-DATASET_NAME             = "ImageNet" # Options: "CIFAR10" "CIFAR100" "TinyImageNet"  "ImageNet"
+DATASET_DIR              = '../datasets/CIFAR10/' #'../../NetZIP/datasets/ImageNet/imagenet-object-localization-challenge/ILSVRC/Data/CLS-LOC' #'../../NetZIP/datasets/TinyImageNet/' #'../datasets/CIFAR100/' 
+DATASET_NAME             = "CIFAR10" # Options: "CIFAR10" "CIFAR100" "TinyImageNet"  "ImageNet"
 
 NUM_CLASSES              = 1000 # Number of classes in dataset
 
 MODEL_CHOICE             = "resnet" # Option:"resnet" "vgg"
-MODEL_VARIANT            = "resnet18" # Common Options: "resnet18" "vgg11" For more options explore files in models to find the different options.
+MODEL_VARIANT            = "resnet26" # Common Options: "resnet18" "vgg11" For more options explore files in models to find the different options.
 
 MODEL_DIR                = "../models/" + MODEL_CHOICE
 MODEL_SELECTION_FLAG     = 2 # create an untrained model = 0, start from a pytorch trained model = 1, start from a previously saved local model = 2
@@ -74,9 +74,9 @@ NOISE_TYPES_ARRAY = ["brightness","contrast","defocus_blur",
 
 NOISE_SEVERITY 	  = 5 # Options from 1 to 5
 
-MAX_SAMPLES_NUMBER = 120 #220
+MAX_SAMPLES_NUMBER = 102#25#120 #220
 N_T_Initial        = 1
-N_T_STEP = 100#25 #16
+N_T_STEP = 2#25 #16
 
 def DIRA_retrain(model, testloader, N_T_trainloader_c, N_T_testloader_c, device, fisher_dict, optpar_dict, num_retrain_epochs, lambda_retrain, lr_retrain, zeta):
 	# Copy model for retraining
@@ -253,9 +253,9 @@ def main():
 			temp_list_lambda           = []
 			temp_list_CFAS             = []
 
-			SGC_flag  = False
+			SGC_flag  = True
 			CFAS_flag = False
-			EWC_flag  = True
+			EWC_flag  = False
 			if SGC_flag == True:
 				lr_retrain = 1e-2
 				lambda_retrain = 0
@@ -317,7 +317,7 @@ def main():
 		# Log
 		logs_dic[noise_type] = N_T_vs_A_T
 
-	results_log.write_file("exp102.txt")
+	results_log.write_file("exp106.txt")
 
 
 
