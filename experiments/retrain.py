@@ -33,8 +33,8 @@ SEED_NUMBER              = 0
 USE_CUDA                 = True
 
 
-DATASET_DIR              = '../datasets/CIFAR10/' #'../../NetZIP/datasets/ImageNet/imagenet-object-localization-challenge/ILSVRC/Data/CLS-LOC' #'../../NetZIP/datasets/TinyImageNet/' #'../datasets/CIFAR100/' 
-DATASET_NAME             = "CIFAR10" # Options: "CIFAR10" "CIFAR100" "TinyImageNet"  "ImageNet"
+DATASET_DIR              = '../datasets/CIFAR100/' #'../../NetZIP/datasets/ImageNet/imagenet-object-localization-challenge/ILSVRC/Data/CLS-LOC' #'../../NetZIP/datasets/TinyImageNet/' #'../datasets/CIFAR100/' 
+DATASET_NAME             = "CIFAR100" # Options: "CIFAR10" "CIFAR100" "TinyImageNet"  "ImageNet"
 
 NUM_CLASSES              = 1000 # Number of classes in dataset
 
@@ -76,7 +76,7 @@ NOISE_SEVERITY 	  = 5 # Options from 1 to 5
 
 MAX_SAMPLES_NUMBER = 102#25#120 #220
 N_T_Initial        = 1
-N_T_STEP = 2#25 #16
+N_T_STEP = 2#66#2#25 #16
 
 def DIRA_retrain(model, testloader, N_T_trainloader_c, N_T_testloader_c, device, fisher_dict, optpar_dict, num_retrain_epochs, lambda_retrain, lr_retrain, zeta):
 	# Copy model for retraining
@@ -130,7 +130,7 @@ def main():
 	# == Preliminaries
 	# ========================================
 	# Fix seeds to allow for repeatable results 
-	set_random_seeds(SEED_NUMBER)
+	# set_random_seeds(SEED_NUMBER)
 
 	# Setup device used for training either gpu or cpu
 	device = set_cuda(USE_CUDA)
@@ -253,9 +253,9 @@ def main():
 			temp_list_lambda           = []
 			temp_list_CFAS             = []
 
-			SGC_flag  = True
+			SGC_flag  = False
 			CFAS_flag = False
-			EWC_flag  = False
+			EWC_flag  = True
 			if SGC_flag == True:
 				lr_retrain = 1e-2
 				lambda_retrain = 0
@@ -281,8 +281,8 @@ def main():
 					temp_list_CFAS.append(CFAS) 
 
 			if EWC_flag == True:
-				for lr_retrain in [1e-5,1e-4,1e-3,1e-2]:
-					for lambda_retrain in [0.25,0.5,0.75,1,2]:
+				for lr_retrain in [1e-5]:#[1e-5,1e-4,1e-3,1e-2]:
+					for lambda_retrain in [1]:#[0.25,0.5,0.75,1,2]:
 
 						retrained_model, CFAS = DIRA_retrain(model, small_test_loader, N_T_trainloader_c, N_T_testloader_c, device, fisher_dict, optpar_dict, num_retrain_epochs, lambda_retrain, lr_retrain, zeta)
 						
@@ -317,7 +317,7 @@ def main():
 		# Log
 		logs_dic[noise_type] = N_T_vs_A_T
 
-	results_log.write_file("exp106.txt")
+	results_log.write_file("exp123.txt")
 
 
 
